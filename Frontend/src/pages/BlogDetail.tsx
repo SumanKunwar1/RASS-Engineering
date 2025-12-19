@@ -37,33 +37,49 @@ const BlogDetail: React.FC = () => {
   const prevPost = currentIndex > 0 ? blogData[currentIndex - 1] : null;
   const nextPost = currentIndex < blogData.length - 1 ? blogData[currentIndex + 1] : null;
 
-  // Function to parse content and format it properly
+  // Enhanced function to parse content and format it properly
   const parseContent = (content: string) => {
-    const sections = content.split('\n\n').filter(section => section.trim());
+    const paragraphs = content.split('\n\n').filter(para => para.trim());
     
-    return sections.map((section, index) => {
-      // Check if this section is a header (ends with colon and is short)
-      const isHeader = section.includes(':') && !section.includes('\n') && section.length < 100 && section.trim().endsWith(':');
+    return paragraphs.map((paragraph, index) => {
+      const lines = paragraph.split('\n').map(line => line.trim()).filter(line => line);
       
-      if (isHeader) {
+      // If only one line, check if it's a header or paragraph
+      if (lines.length === 1) {
+        const line = lines[0];
+        
+        // Check if it's a header (ends with colon, relatively short, no period at end)
+        const isHeader = (line.endsWith(':') || line.endsWith('?')) && 
+                        line.length < 100 && 
+                        !line.endsWith('.');
+        
+        if (isHeader) {
+          return (
+            <h3 key={index} className="text-xl font-bold text-black mt-8 mb-4">
+              {line}
+            </h3>
+          );
+        }
+        
+        // Regular paragraph
         return (
-          <h3 key={index} className="text-xl font-bold text-black mt-8 mb-4">
-            {section.trim()}
-          </h3>
+          <p key={index} className="text-gray-700 leading-8 mb-6">
+            {line}
+          </p>
         );
       }
-
-      // Check if this is a numbered list
-      const lines = section.split('\n').filter(line => line.trim());
-      const isNumberedList = lines.every(line => /^\d+\./.test(line.trim())) && lines.length > 1;
-
+      
+      // Multiple lines - check if it's a list
+      // Check for numbered list (starts with number followed by period or parenthesis)
+      const isNumberedList = lines.every(line => /^\d+[\.)]\s/.test(line));
+      
       if (isNumberedList) {
         return (
-          <ol key={index} className="space-y-2 list-decimal list-inside text-gray-700 mb-6">
+          <ol key={index} className="space-y-3 list-decimal list-outside ml-6 text-gray-700 mb-6">
             {lines.map((line, lineIndex) => {
-              const cleanedLine = line.trim().replace(/^\d+\.\s*/, '');
+              const cleanedLine = line.replace(/^\d+[\.)]\s*/, '');
               return (
-                <li key={lineIndex} className="ml-4 text-gray-700">
+                <li key={lineIndex} className="pl-2 leading-7">
                   {cleanedLine}
                 </li>
               );
@@ -71,17 +87,17 @@ const BlogDetail: React.FC = () => {
           </ol>
         );
       }
-
-      // Check if this is a bulleted list (starts with -, *, or •)
-      const isBulletedList = lines.every(line => /^[-*•]\s/.test(line.trim())) && lines.length > 1;
-
+      
+      // Check for bulleted list (starts with -, *, or •)
+      const isBulletedList = lines.every(line => /^[-*•]\s/.test(line));
+      
       if (isBulletedList) {
         return (
-          <ul key={index} className="space-y-2 list-disc list-inside text-gray-700 mb-6">
+          <ul key={index} className="space-y-3 list-disc list-outside ml-6 text-gray-700 mb-6">
             {lines.map((line, lineIndex) => {
-              const cleanedLine = line.trim().replace(/^[-*•]\s*/, '');
+              const cleanedLine = line.replace(/^[-*•]\s*/, '');
               return (
-                <li key={lineIndex} className="ml-4 text-gray-700">
+                <li key={lineIndex} className="pl-2 leading-7">
                   {cleanedLine}
                 </li>
               );
@@ -89,12 +105,80 @@ const BlogDetail: React.FC = () => {
           </ul>
         );
       }
-
-      // Otherwise, it's a paragraph
+      
+      // Check if first line is a header and rest are content
+      const firstLineIsHeader = lines[0].endsWith(':') && lines[0].length < 100;
+      
+      if (firstLineIsHeader && lines.length > 1) {
+        // Check if remaining lines form a list
+        const remainingLines = lines.slice(1);
+        const remainingIsBulletList = remainingLines.every(line => /^[-*•]\s/.test(line));
+        const remainingIsNumberedList = remainingLines.every(line => /^\d+[\.)]\s/.test(line));
+        
+        if (remainingIsBulletList) {
+          return (
+            <div key={index} className="mb-6">
+              <h3 className="text-xl font-bold text-black mt-8 mb-4">
+                {lines[0]}
+              </h3>
+              <ul className="space-y-3 list-disc list-outside ml-6 text-gray-700">
+                {remainingLines.map((line, lineIndex) => {
+                  const cleanedLine = line.replace(/^[-*•]\s*/, '');
+                  return (
+                    <li key={lineIndex} className="pl-2 leading-7">
+                      {cleanedLine}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        }
+        
+        if (remainingIsNumberedList) {
+          return (
+            <div key={index} className="mb-6">
+              <h3 className="text-xl font-bold text-black mt-8 mb-4">
+                {lines[0]}
+              </h3>
+              <ol className="space-y-3 list-decimal list-outside ml-6 text-gray-700">
+                {remainingLines.map((line, lineIndex) => {
+                  const cleanedLine = line.replace(/^\d+[\.)]\s*/, '');
+                  return (
+                    <li key={lineIndex} className="pl-2 leading-7">
+                      {cleanedLine}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          );
+        }
+        
+        // Header followed by regular text
+        return (
+          <div key={index} className="mb-6">
+            <h3 className="text-xl font-bold text-black mt-8 mb-4">
+              {lines[0]}
+            </h3>
+            {remainingLines.map((line, lineIndex) => (
+              <p key={lineIndex} className="text-gray-700 leading-8 mb-3">
+                {line}
+              </p>
+            ))}
+          </div>
+        );
+      }
+      
+      // Multiple paragraphs grouped together
       return (
-        <p key={index} className="text-gray-700 leading-8 mb-6">
-          {section.trim()}
-        </p>
+        <div key={index} className="mb-6">
+          {lines.map((line, lineIndex) => (
+            <p key={lineIndex} className="text-gray-700 leading-8 mb-3">
+              {line}
+            </p>
+          ))}
+        </div>
       );
     });
   };
