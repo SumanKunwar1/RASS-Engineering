@@ -15,6 +15,7 @@ import Services from './pages/Services';
 import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetails';
 import Blog from './pages/Blog';
+import BlogDetail from './pages/BlogDetail';
 import Contact from './pages/Contact';
 import RequestQuote from './pages/RequestQuote';
 import Privacy from './pages/Privacy';
@@ -33,6 +34,7 @@ const App: React.FC = () => {
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:id" element={<BlogDetail />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/request-quote" element={<RequestQuote />} />
             <Route path="/privacy" element={<Privacy />} />

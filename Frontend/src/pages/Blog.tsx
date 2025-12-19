@@ -3,8 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, ArrowRight } from 'lucide-react';
-import { Card, CardContent } from '../components/ui/card';
-import { blogPosts } from '../data/mockData';
+import { blogData } from '../data/blogData';
 
 const Blog: React.FC = () => {
   return (
@@ -51,58 +50,60 @@ const Blog: React.FC = () => {
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {blogPosts.map((post, index) => (
+              {blogData.map((post, index) => (
                 <motion.div
                   key={post.id}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <Card className="h-full overflow-hidden border-0 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group">
-                    <div className="relative h-56 overflow-hidden">
-                      <img
-                        src={post.image}
-                        alt={post.title}
-                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                      />
-                      <div className="absolute top-4 left-4 bg-[#F46A1F] text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        {post.category}
+                  <Link to={`/blog/${post.id}`} className="block h-full">
+                    <div className="rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group bg-white border border-gray-100 h-full flex flex-col">
+                      <div className="relative h-56 overflow-hidden">
+                        <img
+                          src={post.image}
+                          alt={post.title}
+                          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                        />
+                        <div className="absolute top-4 left-4 bg-[#F46A1F] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                          {post.category}
+                        </div>
+                      </div>
+
+                      <div className="p-6 flex flex-col flex-1">
+                        <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
+                          <div className="flex items-center">
+                            <Calendar size={16} className="mr-1" />
+                            {new Date(post.date).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            })}
+                          </div>
+                          <div className="flex items-center">
+                            <Clock size={16} className="mr-1" />
+                            {post.readTime}
+                          </div>
+                        </div>
+
+                        <h3 className="text-xl font-bold text-black mb-3 group-hover:text-[#F46A1F] transition-colors line-clamp-2">
+                          {post.title}
+                        </h3>
+
+                        <p className="text-gray-600 text-sm line-clamp-3 mb-4 flex-1">
+                          {post.excerpt}
+                        </p>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500">By {post.author}</span>
+                          <div className="flex items-center text-[#F46A1F] font-semibold text-sm group-hover:gap-2 transition-all">
+                            Read More
+                            <ArrowRight size={16} className="ml-1" />
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    <CardContent className="p-6">
-                      <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
-                        <div className="flex items-center">
-                          <Calendar size={16} className="mr-1" />
-                          {new Date(post.date).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric', 
-                            year: 'numeric' 
-                          })}
-                        </div>
-                        <div className="flex items-center">
-                          <Clock size={16} className="mr-1" />
-                          {post.readTime}
-                        </div>
-                      </div>
-
-                      <h3 className="text-xl font-bold text-black mb-3 group-hover:text-[#F46A1F] transition-colors line-clamp-2">
-                        {post.title}
-                      </h3>
-
-                      <p className="text-gray-600 text-sm line-clamp-3 mb-4">
-                        {post.excerpt}
-                      </p>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">By {post.author}</span>
-                        <div className="flex items-center text-[#F46A1F] font-semibold text-sm group-hover:gap-2 transition-all">
-                          Read More
-                          <ArrowRight size={16} className="ml-1" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  </Link>
                 </motion.div>
               ))}
             </div>
