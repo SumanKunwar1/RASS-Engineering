@@ -338,7 +338,7 @@ export const testimonials: Testimonial[] = [
 export const whyChooseUsData: WhyChooseUs[] = [
   {
     icon: 'Award',
-    title: '31+ Years Experience',
+    title: '32+ Years Experience',
     description: 'Three decades of engineering excellence since 2050 B.S.'
   },
   {
@@ -365,7 +365,7 @@ export const whyChooseUsData: WhyChooseUs[] = [
 
 export const companyInfo: CompanyInfo = {
   name: 'RASS Engineering & Construction Pvt. Ltd.',
-  tagline: '31+ Years of Engineering Excellence',
+  tagline: '32+ Years of Engineering Excellence',
   phone: '977-01-5907561',
   mobile: ['9851084572', '9849792606'],
   email: 'rass.engineering2016@gmail.com',

@@ -51,7 +51,7 @@ const Navbar: FC = () => {
             />
             <div className="hidden md:block">
               <div className="text-lg font-bold text-black leading-tight">RASS Engineering</div>
-              <div className="text-xs text-gray-600">31+ Years of Excellence</div>
+              <div className="text-xs text-gray-600">32+ Years of Excellence</div>
             </div>
           </Link>
 

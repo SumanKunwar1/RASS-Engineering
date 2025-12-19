@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, ArrowLeft, ArrowRight } from 'lucide-react';
-import { Button } from '../components/ui/button';
 import { blogData } from '../data/blogData';
 
 const BlogDetail: React.FC = () => {
@@ -22,12 +21,12 @@ const BlogDetail: React.FC = () => {
         <div className="text-center">
           <h1 className="text-4xl font-bold text-black mb-4">Blog Post Not Found</h1>
           <p className="text-gray-600 mb-8">Sorry, the blog post you're looking for doesn't exist.</p>
-          <Button 
+          <button 
             onClick={() => navigate('/blog')}
-            className="bg-[#F46A1F] hover:bg-[#d85a15] text-white"
+            className="inline-flex items-center px-6 py-3 bg-[#F46A1F] hover:bg-[#d85a15] text-white font-semibold rounded-lg transition-colors"
           >
             Back to Blog
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -37,6 +36,68 @@ const BlogDetail: React.FC = () => {
   const currentIndex = blogData.findIndex(post => post.id === Number(id));
   const prevPost = currentIndex > 0 ? blogData[currentIndex - 1] : null;
   const nextPost = currentIndex < blogData.length - 1 ? blogData[currentIndex + 1] : null;
+
+  // Function to parse content and format it properly
+  const parseContent = (content: string) => {
+    const sections = content.split('\n\n').filter(section => section.trim());
+    
+    return sections.map((section, index) => {
+      // Check if this section is a header (ends with colon and is short)
+      const isHeader = section.includes(':') && !section.includes('\n') && section.length < 100 && section.trim().endsWith(':');
+      
+      if (isHeader) {
+        return (
+          <h3 key={index} className="text-xl font-bold text-black mt-8 mb-4">
+            {section.trim()}
+          </h3>
+        );
+      }
+
+      // Check if this is a numbered list
+      const lines = section.split('\n').filter(line => line.trim());
+      const isNumberedList = lines.every(line => /^\d+\./.test(line.trim())) && lines.length > 1;
+
+      if (isNumberedList) {
+        return (
+          <ol key={index} className="space-y-2 list-decimal list-inside text-gray-700 mb-6">
+            {lines.map((line, lineIndex) => {
+              const cleanedLine = line.trim().replace(/^\d+\.\s*/, '');
+              return (
+                <li key={lineIndex} className="ml-4 text-gray-700">
+                  {cleanedLine}
+                </li>
+              );
+            })}
+          </ol>
+        );
+      }
+
+      // Check if this is a bulleted list (starts with -, *, or •)
+      const isBulletedList = lines.every(line => /^[-*•]\s/.test(line.trim())) && lines.length > 1;
+
+      if (isBulletedList) {
+        return (
+          <ul key={index} className="space-y-2 list-disc list-inside text-gray-700 mb-6">
+            {lines.map((line, lineIndex) => {
+              const cleanedLine = line.trim().replace(/^[-*•]\s*/, '');
+              return (
+                <li key={lineIndex} className="ml-4 text-gray-700">
+                  {cleanedLine}
+                </li>
+              );
+            })}
+          </ul>
+        );
+      }
+
+      // Otherwise, it's a paragraph
+      return (
+        <p key={index} className="text-gray-700 leading-8 mb-6">
+          {section.trim()}
+        </p>
+      );
+    });
+  };
 
   return (
     <>
@@ -113,41 +174,10 @@ const BlogDetail: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="prose prose-lg max-w-none"
+              className="prose-lg max-w-none"
             >
-              <div className="text-gray-700 leading-relaxed space-y-6">
-                {blogPost.content.split('\n\n').map((paragraph, index) => {
-                  // Check if this is a header (bold followed by colon)
-                  if (paragraph.includes(':') && paragraph.length < 100) {
-                    return (
-                      <div key={index}>
-                        <h3 className="text-xl font-bold text-black mt-8 mb-4">
-                          {paragraph}
-                        </h3>
-                      </div>
-                    );
-                  }
-                  
-                  // Check if this is a list item (starts with hyphen or number)
-                  if (paragraph.startsWith('-') || /^\d+\./.test(paragraph)) {
-                    const items = paragraph.split('\n').filter(item => item.trim());
-                    return (
-                      <ul key={index} className="space-y-3 list-disc list-inside text-gray-700">
-                        {items.map((item, itemIndex) => (
-                          <li key={itemIndex} className="ml-4">
-                            {item.replace(/^[-\d+.]\s*/, '')}
-                          </li>
-                        ))}
-                      </ul>
-                    );
-                  }
-
-                  return (
-                    <p key={index} className="text-gray-700 leading-8">
-                      {paragraph}
-                    </p>
-                  );
-                })}
+              <div className="text-gray-700">
+                {parseContent(blogPost.content)}
               </div>
             </motion.article>
 
