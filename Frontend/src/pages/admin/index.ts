@@ -8,3 +8,4 @@ export { default as AdminBlog } from './AdminBlog';
 export { default as AdminContact } from './AdminContact';
 export { default as AdminSubmissions } from './AdminSubmissions';
 export { default as AdminSettings } from './AdminSettings';
+export { default as AdminLogin } from './AdminLogin';

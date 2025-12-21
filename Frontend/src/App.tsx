@@ -35,6 +35,7 @@ import {
   AdminServices,
   AdminProjects,
   AdminBlog,
+  AdminLogin,
   AdminContact,
   AdminSubmissions,
   AdminSettings,
@@ -130,6 +131,7 @@ const App: React.FC = () => {
                     <Footer />
                   </>
                 } />
+                <Route path="/admin/login" element={<AdminLogin />} />
 
                 {/* Admin Routes (without Navbar and Footer) */}
                 <Route path="/admin" element={<AdminLayout />}>

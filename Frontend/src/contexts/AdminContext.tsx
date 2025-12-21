@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useState } from 'react';
 import {
   AdminState,
   AdminAction,
@@ -12,6 +12,14 @@ import {
   QuoteSubmission,
   ContactSubmission,
 } from '@/types/admin';
+
+// Auth types
+interface AdminUser {
+  email: string;
+  name: string;
+}
+
+const AUTH_STORAGE_KEY = 'rass_admin_auth';
 
 // Initial state with mock data that mirrors your frontend
 const initialState: AdminState = {
@@ -274,6 +282,11 @@ interface AdminContextType {
   // Helper functions for API integration later
   saveToStorage: () => void;
   loadFromStorage: () => void;
+  // Auth functions
+  isAuthenticated: boolean;
+  adminUser: AdminUser | null;
+  login: (user: AdminUser) => void;
+  logout: () => void;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -282,10 +295,13 @@ const STORAGE_KEY = 'rass_admin_data';
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(adminReducer, initialState);
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Load from localStorage on mount
+  // Load auth state on mount
   useEffect(() => {
     loadFromStorage();
+    loadAuthState();
   }, []);
 
   // Save to localStorage whenever state changes
@@ -313,8 +329,42 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loadAuthState = () => {
+    try {
+      const savedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (savedAuth) {
+        const parsed = JSON.parse(savedAuth);
+        setAdminUser(parsed);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error('Failed to load auth state:', error);
+    }
+  };
+
+  const login = (user: AdminUser) => {
+    setAdminUser(user);
+    setIsAuthenticated(true);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+  };
+
+  const logout = () => {
+    setAdminUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  };
+
   return (
-    <AdminContext.Provider value={{ state, dispatch, saveToStorage, loadFromStorage }}>
+    <AdminContext.Provider value={{ 
+      state, 
+      dispatch, 
+      saveToStorage, 
+      loadFromStorage,
+      isAuthenticated,
+      adminUser,
+      login,
+      logout 
+    }}>
       {children}
     </AdminContext.Provider>
   );
