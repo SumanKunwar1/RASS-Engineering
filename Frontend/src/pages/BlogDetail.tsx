@@ -37,18 +37,164 @@ const BlogDetail: React.FC = () => {
   const prevPost = currentIndex > 0 ? blogData[currentIndex - 1] : null;
   const nextPost = currentIndex < blogData.length - 1 ? blogData[currentIndex + 1] : null;
 
-  // Enhanced function to parse content and format it properly
+  // Enhanced function to parse content with image and media support
   const parseContent = (content: string) => {
-    const paragraphs = content.split('\n\n').filter(para => para.trim());
+    const blocks = content.split('\n\n').filter(block => block.trim());
     
-    return paragraphs.map((paragraph, index) => {
-      const lines = paragraph.split('\n').map(line => line.trim()).filter(line => line);
+    return blocks.map((block, index) => {
+      const trimmedBlock = block.trim();
       
-      // If only one line, check if it's a header or paragraph
+      // Check for image syntax: [image:url:alignment:caption]
+      // alignment can be: left, center, right, full
+      const imageMatch = trimmedBlock.match(/^\[image:([^\]]+):([^\]]+):([^\]]*)\]$/);
+      if (imageMatch) {
+        const [, url, alignment, caption] = imageMatch;
+        
+        const alignmentClasses = {
+          left: 'float-left mr-6 mb-6 w-full md:w-1/2',
+          right: 'float-right ml-6 mb-6 w-full md:w-1/2',
+          center: 'mx-auto my-8 w-full md:w-3/4',
+          full: 'w-full my-8'
+        };
+        
+        const containerClass = alignmentClasses[alignment as keyof typeof alignmentClasses] || alignmentClasses.center;
+        
+        return (
+          <div key={index} className={containerClass}>
+            <img
+              src={url.trim()}
+              alt={caption || 'Blog image'}
+              className="w-full rounded-lg shadow-lg"
+            />
+            {caption && (
+              <p className="text-sm text-gray-600 italic mt-2 text-center">
+                {caption}
+              </p>
+            )}
+          </div>
+        );
+      }
+      
+      // Check for image gallery: [gallery:url1,url2,url3:caption]
+      const galleryMatch = trimmedBlock.match(/^\[gallery:([^\]]+):([^\]]*)\]$/);
+      if (galleryMatch) {
+        const [, urls, caption] = galleryMatch;
+        const imageUrls = urls.split(',').map(url => url.trim());
+        
+        const gridClass = imageUrls.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3';
+        
+        return (
+          <div key={index} className="my-8">
+            <div className={`grid ${gridClass} gap-4`}>
+              {imageUrls.map((url, imgIndex) => (
+                <img
+                  key={imgIndex}
+                  src={url}
+                  alt={`Gallery image ${imgIndex + 1}`}
+                  className="w-full h-64 object-cover rounded-lg shadow-md hover:shadow-xl transition-shadow"
+                />
+              ))}
+            </div>
+            {caption && (
+              <p className="text-sm text-gray-600 italic mt-3 text-center">
+                {caption}
+              </p>
+            )}
+          </div>
+        );
+      }
+      
+      // Check for quote block: [quote:text:author]
+      const quoteMatch = trimmedBlock.match(/^\[quote:([^\]]+):([^\]]*)\]$/);
+      if (quoteMatch) {
+        const [, text, author] = quoteMatch;
+        return (
+          <blockquote key={index} className="my-8 pl-6 border-l-4 border-[#F46A1F] bg-gray-50 p-6 rounded-r-lg">
+            <p className="text-xl text-gray-800 italic leading-relaxed mb-2">
+              "{text.trim()}"
+            </p>
+            {author && (
+              <footer className="text-gray-600 font-semibold">
+                — {author.trim()}
+              </footer>
+            )}
+          </blockquote>
+        );
+      }
+      
+      // Check for callout/info box: [callout:title:content]
+      const calloutMatch = trimmedBlock.match(/^\[callout:([^\]]+):([^\]]+)\]$/);
+      if (calloutMatch) {
+        const [, title, content] = calloutMatch;
+        return (
+          <div key={index} className="my-8 p-6 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+            <h4 className="text-lg font-bold text-blue-900 mb-2">{title.trim()}</h4>
+            <p className="text-gray-700 leading-7">{content.trim()}</p>
+          </div>
+        );
+      }
+
+      // Check for video embed: [video:url:caption]
+      const videoMatch = trimmedBlock.match(/^\[video:([^\]]+):([^\]]*)\]$/);
+      if (videoMatch) {
+        const [, url, caption] = videoMatch;
+        const videoId = url.includes('youtube.com') || url.includes('youtu.be') 
+          ? url.split(/v=|\//).pop()?.split('&')[0]
+          : null;
+        
+        if (videoId) {
+          return (
+            <div key={index} className="my-8">
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  title="Video player"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+              {caption && (
+                <p className="text-sm text-gray-600 italic mt-3 text-center">
+                  {caption}
+                </p>
+              )}
+            </div>
+          );
+        }
+      }
+      
+      // Regular content parsing
+      const lines = block.split('\n').map(line => line.trim()).filter(line => line);
+      
+      // Single line processing
       if (lines.length === 1) {
         const line = lines[0];
         
-        // Check if it's a header (ends with colon, relatively short, no period at end)
+        // Check for headers
+        if (line.startsWith('# ')) {
+          return (
+            <h2 key={index} className="text-3xl font-bold text-black mt-12 mb-6">
+              {line.substring(2)}
+            </h2>
+          );
+        }
+        if (line.startsWith('## ')) {
+          return (
+            <h3 key={index} className="text-2xl font-bold text-black mt-10 mb-5">
+              {line.substring(3)}
+            </h3>
+          );
+        }
+        if (line.startsWith('### ')) {
+          return (
+            <h4 key={index} className="text-xl font-bold text-black mt-8 mb-4">
+              {line.substring(4)}
+            </h4>
+          );
+        }
+        
+        // Check if it's a natural header (ends with colon)
         const isHeader = (line.endsWith(':') || line.endsWith('?')) && 
                         line.length < 100 && 
                         !line.endsWith('.');
@@ -69,8 +215,7 @@ const BlogDetail: React.FC = () => {
         );
       }
       
-      // Multiple lines - check if it's a list
-      // Check for numbered list (starts with number followed by period or parenthesis)
+      // Multiple lines - check for lists
       const isNumberedList = lines.every(line => /^\d+[\.)]\s/.test(line));
       
       if (isNumberedList) {
@@ -88,7 +233,6 @@ const BlogDetail: React.FC = () => {
         );
       }
       
-      // Check for bulleted list (starts with -, *, or •)
       const isBulletedList = lines.every(line => /^[-*•]\s/.test(line));
       
       if (isBulletedList) {
@@ -106,11 +250,10 @@ const BlogDetail: React.FC = () => {
         );
       }
       
-      // Check if first line is a header and rest are content
+      // Check if first line is a header
       const firstLineIsHeader = lines[0].endsWith(':') && lines[0].length < 100;
       
       if (firstLineIsHeader && lines.length > 1) {
-        // Check if remaining lines form a list
         const remainingLines = lines.slice(1);
         const remainingIsBulletList = remainingLines.every(line => /^[-*•]\s/.test(line));
         const remainingIsNumberedList = remainingLines.every(line => /^\d+[\.)]\s/.test(line));
@@ -155,7 +298,6 @@ const BlogDetail: React.FC = () => {
           );
         }
         
-        // Header followed by regular text
         return (
           <div key={index} className="mb-6">
             <h3 className="text-xl font-bold text-black mt-8 mb-4">
@@ -170,7 +312,7 @@ const BlogDetail: React.FC = () => {
         );
       }
       
-      // Multiple paragraphs grouped together
+      // Multiple paragraphs
       return (
         <div key={index} className="mb-6">
           {lines.map((line, lineIndex) => (
