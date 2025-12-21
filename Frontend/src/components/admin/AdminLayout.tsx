@@ -81,8 +81,8 @@ export default function AdminLayout() {
         <div className="flex items-center justify-between p-4 border-b border-admin-sidebar-hover">
           {!collapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 brand-gradient rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">R</span>
+              <div className="w-10 h-10 bg-[#F46A1F] rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">R</span>
               </div>
               <div>
                 <h1 className="text-admin-sidebar-foreground font-bold text-sm">RASS Admin</h1>
@@ -91,8 +91,8 @@ export default function AdminLayout() {
             </div>
           )}
           {collapsed && (
-            <div className="w-10 h-10 brand-gradient rounded-lg flex items-center justify-center mx-auto">
-              <span className="text-primary-foreground font-bold text-lg">R</span>
+            <div className="w-10 h-10 bg-[#F46A1F] rounded-lg flex items-center justify-center mx-auto">
+              <span className="text-white font-bold text-lg">R</span>
             </div>
           )}
         </div>
@@ -108,7 +108,7 @@ export default function AdminLayout() {
                   className={cn(
                     'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group',
                     isActive(item.path)
-                      ? 'bg-admin-sidebar-accent text-primary-foreground'
+                      ? 'bg-[#F46A1F] text-white shadow-lg shadow-[#F46A1F]/20'
                       : 'text-admin-sidebar-foreground/70 hover:bg-admin-sidebar-hover hover:text-admin-sidebar-foreground'
                   )}
                 >
@@ -116,7 +116,7 @@ export default function AdminLayout() {
                     size={20}
                     className={cn(
                       'flex-shrink-0',
-                      isActive(item.path) ? 'text-primary-foreground' : 'group-hover:text-admin-sidebar-accent'
+                      isActive(item.path) ? 'text-white' : 'group-hover:text-[#F46A1F]'
                     )}
                   />
                   {!collapsed && (
