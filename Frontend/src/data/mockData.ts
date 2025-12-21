@@ -81,15 +81,7 @@ export const servicesData: ServiceData[] = [
     applications: ['Basements', 'Roofs', 'Bathrooms', 'Water tanks', 'Foundations'],
     image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&q=80'
   },
-  {
-    id: 'cement-grouting',
-    title: 'Cement Pressure Grouting',
-    icon: 'Hammer',
-    description: 'Advanced pressure grouting techniques to strengthen foundations and seal cracks.',
-    benefits: ['Foundation strengthening', 'Crack sealing', 'Improved structural integrity'],
-    applications: ['Foundation repairs', 'Dam construction', 'Tunnel sealing', 'Underground structures'],
-    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80'
-  },
+  
   {
     id: 'expansion-joint',
     title: 'Expansion Joint Treatment',
@@ -107,15 +99,6 @@ export const servicesData: ServiceData[] = [
     benefits: ['Enhanced safety', 'Earthquake resistance', 'Extended building life'],
     applications: ['Old buildings', 'Heritage structures', 'Industrial facilities', 'Residential complexes'],
     image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80'
-  },
-  {
-    id: 'anti-termite',
-    title: 'Anti-Termite Treatment',
-    icon: 'Bug',
-    description: 'Complete anti-termite protection for buildings and structures.',
-    benefits: ['Protects wood structures', 'Long-lasting protection', 'Eco-friendly solutions'],
-    applications: ['New constructions', 'Existing buildings', 'Wooden structures'],
-    image: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80'
   },
   {
     id: 'epoxy-flooring',
@@ -152,6 +135,15 @@ export const servicesData: ServiceData[] = [
     benefits: ['Large span coverage', 'Durable construction', 'Custom designs'],
     applications: ['Industrial sheds', 'Warehouses', 'Stadiums', 'Parking canopies'],
     image: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&q=80'
+  },
+   {
+    id: 'anti-termite',
+    title: 'Anti-Termite Treatment',
+    icon: 'Bug',
+    description: 'Complete anti-termite protection for buildings and structures.',
+    benefits: ['Protects wood structures', 'Long-lasting protection', 'Eco-friendly solutions'],
+    applications: ['New constructions', 'Existing buildings', 'Wooden structures'],
+    image: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80'
   }
 ];
 

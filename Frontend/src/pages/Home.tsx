@@ -45,7 +45,7 @@ const Home: React.FC = () => {
                 </div>
 
                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-black leading-tight mb-6">
-                  31+ Years of
+                  32+ Years of
                   <span className="block text-[#F46A1F]">Engineering Excellence</span>
                 </h1>
 
@@ -70,7 +70,7 @@ const Home: React.FC = () => {
                 {/* Quick Stats */}
                 <div className="grid grid-cols-3 gap-6 mt-12">
                   <div>
-                    <div className="text-3xl font-bold text-[#F46A1F]">31+</div>
+                    <div className="text-3xl font-bold text-[#F46A1F]">32+</div>
                     <div className="text-sm text-gray-600">Years Experience</div>
                   </div>
                   <div>
