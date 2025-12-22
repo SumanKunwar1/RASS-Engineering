@@ -88,6 +88,7 @@ export interface TeamMember {
   image: string;
   email?: string;
   linkedin?: string;
+  phone?: string;
   excerpt?: string;
   content?: string;
   [key: string]: any; // Allow additional properties
@@ -104,17 +105,45 @@ export interface CompanyValue {
   [key: string]: any; // Allow additional properties
 }
 
+// ==================== STATS ====================
+export interface StatItem {
+  id?: string;
+  label: string;
+  value: string;
+  icon?: string;
+}
+
 // ==================== ABOUT CONTENT ====================
 export interface AboutContent {
   id?: string;
+  
+  // Hero Section
   heroTitle: string;
   heroSubtitle: string;
+  
+  // Mission & Vision
   mission: string;
   vision: string;
+  
+  // Story Section
+  storyTitle?: string;
   history: string;
+  storyImage?: string;
+  foundedYear?: string;
+  experience?: string;
+  completedProjects?: string;
+  
+  // Leadership
+  directorName?: string;
+  directorPosition?: string;
+  directorBio?: string;
+  directorExperience?: string;
+  
+  // Related Collections
   values: CompanyValue[];
   team: TeamMember[];
-  stats: { label: string; value: string }[];
+  stats: StatItem[];
+  
   excerpt?: string;
   content?: string;
   [key: string]: any; // Allow additional properties
@@ -182,10 +211,10 @@ export interface SiteSettings {
 export interface AdminState {
   hero: HeroSection;
   about?: AboutSection;
+  aboutContent?: AboutContent; // New comprehensive about content
   services: ServiceItem[];
   projects: ProjectItem[];
   blog: BlogPost[];
-  aboutContent?: AboutContent;
   contact: ContactInfo;
   settings: SiteSettings;
   quoteSubmissions: QuoteSubmission[];
@@ -275,6 +304,7 @@ export interface FormModalProps {
   children: React.ReactNode;
   submitText?: string;
   cancelText?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 // ==================== CONTENT CARD TYPES ====================
@@ -286,6 +316,7 @@ export interface ContentCardProps {
     label: string;
     onClick: () => void;
   };
+  headerAction?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -294,6 +325,11 @@ export interface ContentCardProps {
 export interface PageHeaderProps {
   title: string;
   description?: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+    icon?: any;
+  };
   children?: React.ReactNode;
 }
 
@@ -323,6 +359,14 @@ export type IconName =
   | 'ChevronRight'
   | 'CheckCircle2'
   | 'ArrowRight'
+  | 'Award'
+  | 'Users'
+  | 'Target'
+  | 'Eye'
+  | 'Heart'
+  | 'Star'
+  | 'Shield'
+  | 'Zap'
   | string;
 
 // ==================== FILE UPLOAD TYPES ====================
