@@ -43,7 +43,7 @@ const About: React.FC = () => {
         <title>About Us | RASS Engineering & Construction</title>
         <meta
           name="description"
-          content="Learn about RASS Engineering & Construction Pvt. Ltd. - 31+ years of engineering excellence led by Managing Director Rabi Kumar Paudel."
+          content="Learn about RASS Engineering & Construction Pvt. Ltd. - 32+ years of engineering excellence led by Managing Director Rabi Kumar Paudel."
         />
         <link rel="canonical" href="/about" />
       </Helmet>
@@ -120,7 +120,7 @@ const About: React.FC = () => {
 
                 <div className="mt-8 grid grid-cols-2 gap-6">
                   <div className="bg-[#F4F4F4] p-6 rounded-xl">
-                    <div className="text-3xl font-bold text-[#F46A1F] mb-2">31+</div>
+                    <div className="text-3xl font-bold text-[#F46A1F] mb-2">32+</div>
                     <div className="text-gray-600">Years of Experience</div>
                   </div>
                   <div className="bg-[#F4F4F4] p-6 rounded-xl">
