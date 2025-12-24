@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -40,6 +40,9 @@ import {
   AdminSubmissions,
   AdminSettings,
 } from "@/pages/admin";
+
+// Import the ProtectedRoute component
+import ProtectedRoute from "@/components/admin/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -133,8 +136,12 @@ const App: React.FC = () => {
                 } />
                 <Route path="/admin/login" element={<AdminLogin />} />
 
-                {/* Admin Routes (without Navbar and Footer) */}
-                <Route path="/admin" element={<AdminLayout />}>
+                {/* Protected Admin Routes */}
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <AdminLayout />
+                  </ProtectedRoute>
+                }>
                   <Route index element={<AdminDashboard />} />
                   <Route path="home" element={<AdminHomePage />} />
                   <Route path="about" element={<AdminAbout />} />
