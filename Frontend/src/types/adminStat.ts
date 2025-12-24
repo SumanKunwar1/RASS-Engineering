@@ -1,4 +1,4 @@
-import { AdminState, AboutContent, CompanyValue, TeamMember, StatItem } from './types/admin';
+import { AdminState, AboutContent, CompanyValue, TeamMember, StatItem } from './admin';
 
 // Default Company Values
 const defaultValues: CompanyValue[] = [

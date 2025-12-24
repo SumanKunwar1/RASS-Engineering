@@ -13,6 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import * as Icons from 'lucide-react';
 
+interface HeroButton {
+  id: string;
+  label: string;
+  route: string;
+  variant?: 'primary' | 'outline';
+}
+
 interface AboutSection {
   id: string;
   title: string;
@@ -59,6 +66,15 @@ export default function AdminHome() {
   const [isEditingHero, setIsEditingHero] = useState(false);
   const [heroData, setHeroData] = useState<HeroSection>(state.hero);
   const [heroImages, setHeroImages] = useState<string[]>(state.hero.images);
+  const [heroTitle, setHeroTitle] = useState<string>(state.hero.title || '32+ Years of');
+  const [heroTitleHighlight, setHeroTitleHighlight] = useState<string>(state.hero.titleHighlight || 'Engineering Excellence');
+  const [heroSubtitle, setHeroSubtitle] = useState<string>(state.hero.subtitle || 'Specialized Construction Solutions & Engineering Services');
+  const [heroButtons, setHeroButtons] = useState<HeroButton[]>(state.hero.buttons || [
+    { id: '1', label: 'View Services', route: '/services', variant: 'primary' },
+    { id: '2', label: 'Request Consultation', route: '/request-quote', variant: 'outline' }
+  ]);
+  const [isAddingButton, setIsAddingButton] = useState(false);
+  const [editingButton, setEditingButton] = useState<HeroButton | null>(null);
 
   // About Section State
   const [isEditingAbout, setIsEditingAbout] = useState(false);
@@ -102,6 +118,10 @@ export default function AdminHome() {
     e.preventDefault();
     const updatedHero = {
       ...heroData,
+      title: heroTitle,
+      titleHighlight: heroTitleHighlight,
+      subtitle: heroSubtitle,
+      buttons: heroButtons,
       images: heroImages
     };
     dispatch({ type: 'SET_HERO', payload: updatedHero });
@@ -133,6 +153,44 @@ export default function AdminHome() {
     const newImages = [...heroImages];
     newImages[index] = url;
     setHeroImages(newImages);
+  };
+
+  // ==================== HERO BUTTONS HANDLERS ====================
+  const handleAddButton = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingButton?.label && editingButton?.route) {
+      const newButton: HeroButton = {
+        ...editingButton,
+        id: editingButton.id || Date.now().toString()
+      };
+      
+      if (editingButton.id && heroButtons.find(b => b.id === editingButton.id)) {
+        // Update existing button
+        setHeroButtons(heroButtons.map(b => b.id === editingButton.id ? newButton : b));
+        toast.success('Button updated successfully!');
+      } else {
+        // Add new button
+        setHeroButtons([...heroButtons, newButton]);
+        toast.success('Button added successfully!');
+      }
+      
+      setEditingButton(null);
+      setIsAddingButton(false);
+    } else {
+      toast.error('Please fill in all fields');
+    }
+  };
+
+  const handleEditButton = (button: HeroButton) => {
+    setEditingButton(button);
+    setIsAddingButton(true);
+  };
+
+  const handleDeleteButton = (id: string) => {
+    if (confirm('Are you sure you want to delete this button?')) {
+      setHeroButtons(heroButtons.filter(b => b.id !== id));
+      toast.success('Button deleted successfully!');
+    }
   };
 
   // ==================== ABOUT SECTION HANDLERS ====================
@@ -239,11 +297,26 @@ export default function AdminHome() {
                 <div className="inline-block px-4 py-2 bg-[#F46A1F]/10 rounded-full mb-4">
                   <span className="text-[#F46A1F] font-semibold text-sm">Since 2050 B.S.</span>
                 </div>
-                <h3 className="text-4xl md:text-5xl font-bold text-black mb-3">{state.hero.title}</h3>
-                <p className="text-xl text-gray-600 mb-6">{state.hero.subtitle}</p>
-                <Button className="bg-[#F46A1F] hover:bg-[#d85a15] text-white">
-                  {state.hero.ctaText}
-                </Button>
+                <h3 className="text-5xl md:text-6xl lg:text-7xl font-bold text-black leading-tight mb-6">
+                  {heroTitle}
+                  <span className="block text-[#F46A1F]">{heroTitleHighlight}</span>
+                </h3>
+                <p className="text-xl text-gray-600 mb-6">{heroSubtitle}</p>
+                
+                {/* Preview Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                  {heroButtons.map((button) => (
+                    <Button 
+                      key={button.id}
+                      className={button.variant === 'outline' 
+                        ? 'border-2 border-black text-black px-8 py-3 hover:bg-black hover:text-white' 
+                        : 'bg-[#F46A1F] hover:bg-[#d85a15] text-white px-8 py-3'
+                      }
+                    >
+                      {button.label}
+                    </Button>
+                  ))}
+                </div>
               </div>
 
               {/* Images Gallery */}
@@ -285,34 +358,90 @@ export default function AdminHome() {
                 <h4 className="font-semibold text-sm">Hero Text Content</h4>
                 
                 <div>
-                  <Label htmlFor="hero-title">Main Title</Label>
+                  <Label htmlFor="hero-title">Main Title (Big Text)</Label>
                   <Input
                     id="hero-title"
-                    value={heroData.title}
-                    onChange={(e) => setHeroData({ ...heroData, title: e.target.value })}
-                    placeholder="32+ Years of Engineering Excellence"
+                    value={heroTitle}
+                    onChange={(e) => setHeroTitle(e.target.value)}
+                    placeholder="32+ Years of"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">This is the big text part of the heading</p>
                 </div>
 
                 <div>
-                  <Label htmlFor="hero-subtitle">Subtitle</Label>
+                  <Label htmlFor="hero-title-highlight">Title Highlight (Colored Text)</Label>
+                  <Input
+                    id="hero-title-highlight"
+                    value={heroTitleHighlight}
+                    onChange={(e) => setHeroTitleHighlight(e.target.value)}
+                    placeholder="Engineering Excellence"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">This text appears in the accent color (#F46A1F)</p>
+                </div>
+
+                <div>
+                  <Label htmlFor="hero-subtitle">Subtitle (Small Text)</Label>
                   <Input
                     id="hero-subtitle"
-                    value={heroData.subtitle}
-                    onChange={(e) => setHeroData({ ...heroData, subtitle: e.target.value })}
+                    value={heroSubtitle}
+                    onChange={(e) => setHeroSubtitle(e.target.value)}
                     placeholder="Specialized Construction Solutions & Engineering Services"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">This is the small descriptive text</p>
+                </div>
+              </div>
+
+              {/* CTA Buttons Section */}
+              <div className="space-y-4 border-b pb-6">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm">Call-to-Action Buttons</h4>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setEditingButton(null);
+                      setIsAddingButton(true);
+                    }}
+                    className="bg-[#F46A1F] hover:bg-[#d85a15]"
+                  >
+                    <Plus size={14} className="mr-1" />
+                    Add Button
+                  </Button>
                 </div>
 
-                <div>
-                  <Label htmlFor="hero-cta">CTA Button Text</Label>
-                  <Input
-                    id="hero-cta"
-                    value={heroData.ctaText}
-                    onChange={(e) => setHeroData({ ...heroData, ctaText: e.target.value })}
-                    placeholder="View Services"
-                  />
-                </div>
+                {heroButtons.length > 0 ? (
+                  <div className="space-y-3">
+                    {heroButtons.map((button) => (
+                      <div key={button.id} className="p-3 bg-muted rounded-lg flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{button.label}</div>
+                          <div className="text-xs text-muted-foreground">{button.route} • {button.variant || 'primary'}</div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditButton(button)}
+                          >
+                            <Pencil size={14} />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteButton(button.id)}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No buttons added yet</p>
+                )}
               </div>
 
               {/* Image Management */}
@@ -367,6 +496,51 @@ export default function AdminHome() {
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          </FormModal>
+
+          {/* Add/Edit Button Modal */}
+          <FormModal
+            open={isAddingButton}
+            onOpenChange={setIsAddingButton}
+            title={editingButton?.id ? "Edit Button" : "Add New Button"}
+            description={editingButton?.id ? "Update button details" : "Create a new CTA button"}
+            onSubmit={handleAddButton}
+          >
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="button-label">Button Label</Label>
+                <Input
+                  id="button-label"
+                  value={editingButton?.label || ''}
+                  onChange={(e) => setEditingButton(prev => prev ? { ...prev, label: e.target.value } : null)}
+                  placeholder="View Services"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="button-route">Route/URL</Label>
+                <Input
+                  id="button-route"
+                  value={editingButton?.route || ''}
+                  onChange={(e) => setEditingButton(prev => prev ? { ...prev, route: e.target.value } : null)}
+                  placeholder="/services"
+                />
+                <p className="text-xs text-muted-foreground mt-1">e.g., /services, /request-quote, /about</p>
+              </div>
+
+              <div>
+                <Label htmlFor="button-variant">Button Style</Label>
+                <select
+                  id="button-variant"
+                  value={editingButton?.variant || 'primary'}
+                  onChange={(e) => setEditingButton(prev => prev ? { ...prev, variant: e.target.value as 'primary' | 'outline' } : null)}
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                >
+                  <option value="primary">Primary (Orange Background)</option>
+                  <option value="outline">Outline (Black Border)</option>
+                </select>
               </div>
             </div>
           </FormModal>
@@ -463,45 +637,30 @@ export default function AdminHome() {
               </div>
 
               <div>
-                <Label htmlFor="about-md">Managing Director Name</Label>
+                <Label htmlFor="about-director">Managing Director Name</Label>
                 <Input
-                  id="about-md"
+                  id="about-director"
                   value={aboutData.managingDirector}
                   onChange={(e) => setAboutData({ ...aboutData, managingDirector: e.target.value })}
                   placeholder="Ram Kumar Shrestha"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Section Image</Label>
-                <div className="flex items-center gap-3">
-                  {aboutData.image && (
-                    <img 
-                      src={aboutData.image} 
-                      alt="Preview"
-                      className="w-20 h-20 object-cover rounded"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAboutImageUpload}
-                      className="hidden"
-                      id="about-image-upload"
-                    />
-                    <label htmlFor="about-image-upload">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="cursor-pointer w-full"
-                        onClick={() => document.getElementById('about-image-upload')?.click()}
-                      >
-                        <Upload size={16} className="mr-2" />
-                        Upload Image
-                      </Button>
-                    </label>
-                  </div>
+              <div>
+                <Label htmlFor="about-image">Image URL</Label>
+                <Input
+                  id="about-image"
+                  value={aboutData.image}
+                  onChange={(e) => setAboutData({ ...aboutData, image: e.target.value })}
+                  placeholder="https://..."
+                />
+                <div className="mt-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAboutImageUpload}
+                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer"
+                  />
                 </div>
               </div>
             </div>
@@ -514,7 +673,7 @@ export default function AdminHome() {
             <h2 className="text-2xl font-bold">Services</h2>
             <Button
               onClick={() => {
-                setCurrentService({ id: '', title: '', description: '', icon: 'Hammer' });
+                setCurrentService(null);
                 setIsAddingService(true);
               }}
               className="bg-[#F46A1F] hover:bg-[#d85a15]"
@@ -523,20 +682,31 @@ export default function AdminHome() {
               Add Service
             </Button>
           </div>
+
           <ContentCard 
-            title="Services"
+            title="Service Cards"
           >
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {services.map((service) => {
-                const IconComponent = Icons[service.icon as keyof typeof Icons] as React.ComponentType<{ size?: number; className?: string }> | undefined;
-                return (
-                  <Card key={service.id} className="relative">
-                    <CardContent className="p-6">
-                      <div className="absolute top-4 right-4 flex gap-2">
+            {services.length > 0 ? (
+              <div className="space-y-3">
+                {services.map((service) => {
+                  const IconComponent = Icons[service.icon as keyof typeof Icons] as React.ComponentType<{ className?: string; size?: number }>;
+                  return (
+                    <div key={service.id} className="p-4 bg-muted rounded-lg flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 flex-1">
+                        {IconComponent && (
+                          <div className="mt-1">
+                            <IconComponent size={24} className="text-[#F46A1F]" />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm mb-1">{service.title}</h4>
+                          <p className="text-xs text-muted-foreground">{service.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 text-primary hover:text-primary"
                           onClick={() => handleEditService(service)}
                         >
                           <Pencil size={14} />
@@ -544,22 +714,19 @@ export default function AdminHome() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          className="text-destructive hover:text-destructive"
                           onClick={() => handleDeleteService(service.id)}
                         >
                           <Trash2 size={14} />
                         </Button>
                       </div>
-                      <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-3">
-                        {IconComponent && <IconComponent size={24} className="text-orange-500" />}
-                      </div>
-                      <h4 className="font-bold mb-2">{service.title}</h4>
-                      <p className="text-sm text-muted-foreground">{service.description}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No services added yet</p>
+            )}
           </ContentCard>
 
           {/* Add Service Modal */}
