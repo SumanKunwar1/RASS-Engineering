@@ -1,196 +1,522 @@
 import React, { useState } from 'react';
-import { useAdmin } from '@/contexts/AdminContext';
-import { PageHeader } from '@/components/admin/PageHeader';
-import { DataTable, Column } from '@/components/admin/DataTable';
-import { FormModal, DeleteConfirmModal } from '@/components/admin/FormModal';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { ServiceItem } from '@/types/admin';
-import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Trash2, Edit, Plus, X } from 'lucide-react';
+
+// Types
+interface SubService {
+  title: string;
+  blogId: number;
+}
+
+interface ServiceItem {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  subServices: SubService[];
+  applications: string[];
+  gradient: string;
+}
+
+// Mock initial data
+const initialServices: ServiceItem[] = [
+  {
+    id: 'structural-engineering',
+    icon: '🏗️',
+    title: 'Structural Engineering',
+    description: 'Comprehensive structural design and analysis services for buildings and infrastructure projects.',
+    subServices: [
+      { title: 'Building Design & Analysis', blogId: 1 },
+      { title: 'Foundation Engineering', blogId: 2 },
+      { title: 'Seismic Analysis', blogId: 3 }
+    ],
+    applications: ['Residential', 'Commercial', 'Industrial', 'Infrastructure'],
+    gradient: 'from-blue-500 to-blue-700'
+  },
+  {
+    id: 'mep-services',
+    icon: '⚡',
+    title: 'MEP Services',
+    description: 'Mechanical, Electrical, and Plumbing design solutions for efficient building operations.',
+    subServices: [
+      { title: 'HVAC System Design', blogId: 4 },
+      { title: 'Electrical Distribution', blogId: 5 },
+      { title: 'Plumbing & Fire Protection', blogId: 6 }
+    ],
+    applications: ['Smart Buildings', 'Energy Efficiency', 'Sustainable Design'],
+    gradient: 'from-green-500 to-green-700'
+  }
+];
+
+// Modal Component
+const Modal = ({ isOpen, onClose, title, children }: any) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <div className="p-6">{children}</div>
+      </div>
+    </div>
+  );
+};
+
+// Delete Confirmation Modal
+const DeleteModal = ({ isOpen, onClose, onConfirm, itemName }: any) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Confirm Deletion</h2>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to delete "{itemName}"? This action cannot be undone.
+        </p>
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function AdminServices() {
-  const { state, dispatch } = useAdmin();
+  const [services, setServices] = useState<ServiceItem[]>(initialServices);
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [deletingService, setDeletingService] = useState<ServiceItem | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
-  const columns: Column<ServiceItem>[] = [
-    {
-      key: 'icon',
-      label: 'Icon',
-      render: (item) => (
-        <div className="w-8 h-8 bg-primary/10 rounded flex items-center justify-center">
-          <span className="text-xs text-primary font-medium">{item.icon.substring(0, 2)}</span>
-        </div>
-      ),
-    },
-    { key: 'title', label: 'Title' },
-    {
-      key: 'description',
-      label: 'Description',
-      render: (item) => (
-        <span className="text-muted-foreground line-clamp-1 max-w-xs">{item.description}</span>
-      ),
-    },
-    {
-      key: 'features',
-      label: 'Features',
-      render: (item) => <span className="text-muted-foreground">{item.features.length} items</span>,
-    },
-    { key: 'actions', label: 'Actions', className: 'w-20' },
-  ];
+  // Form state for editing
+  const [formData, setFormData] = useState<ServiceItem>({
+    id: '',
+    icon: '',
+    title: '',
+    description: '',
+    subServices: [],
+    applications: [],
+    gradient: 'from-blue-500 to-blue-700'
+  });
+
+  // Sub-service form state
+  const [newSubService, setNewSubService] = useState({ title: '', blogId: 0 });
+  const [newApplication, setNewApplication] = useState('');
 
   const handleCreate = () => {
-    setEditingService({
+    setFormData({
       id: Date.now().toString(),
-      icon: 'Wrench',
+      icon: '🏗️',
       title: '',
       description: '',
-      features: [],
-      image: '',
+      subServices: [],
+      applications: [],
+      gradient: 'from-blue-500 to-blue-700'
     });
     setIsCreating(true);
+    setEditingService(null);
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingService) return;
+  const handleEdit = (service: ServiceItem) => {
+    setFormData({ ...service });
+    setEditingService(service);
+    setIsCreating(false);
+  };
+
+  const handleSave = () => {
+    if (!formData.title.trim()) {
+      alert('Please enter a service title');
+      return;
+    }
 
     if (isCreating) {
-      dispatch({ type: 'ADD_SERVICE', payload: editingService });
-      toast.success('Service created successfully!');
+      setServices([...services, { ...formData, id: formData.id || Date.now().toString() }]);
+      alert('Service created successfully!');
     } else {
-      dispatch({ type: 'UPDATE_SERVICE', payload: editingService });
-      toast.success('Service updated successfully!');
+      setServices(services.map(s => s.id === formData.id ? formData : s));
+      alert('Service updated successfully!');
     }
-    setEditingService(null);
-    setIsCreating(false);
+
+    handleCloseModal();
   };
 
   const handleDelete = () => {
     if (!deletingService) return;
-    dispatch({ type: 'DELETE_SERVICE', payload: deletingService.id });
-    toast.success('Service deleted successfully!');
+    setServices(services.filter(s => s.id !== deletingService.id));
+    alert('Service deleted successfully!');
     setDeletingService(null);
   };
 
-  const handleFeaturesChange = (value: string) => {
-    if (!editingService) return;
-    setEditingService({
-      ...editingService,
-      features: value.split('\n').filter((f) => f.trim()),
+  const handleCloseModal = () => {
+    setEditingService(null);
+    setIsCreating(false);
+    setFormData({
+      id: '',
+      icon: '',
+      title: '',
+      description: '',
+      subServices: [],
+      applications: [],
+      gradient: 'from-blue-500 to-blue-700'
+    });
+    setNewSubService({ title: '', blogId: 0 });
+    setNewApplication('');
+  };
+
+  const addSubService = () => {
+    if (!newSubService.title.trim() || newSubService.blogId <= 0) {
+      alert('Please enter both sub-service title and blog ID');
+      return;
+    }
+
+    setFormData({
+      ...formData,
+      subServices: [...formData.subServices, { ...newSubService }]
+    });
+    setNewSubService({ title: '', blogId: 0 });
+  };
+
+  const removeSubService = (index: number) => {
+    setFormData({
+      ...formData,
+      subServices: formData.subServices.filter((_, i) => i !== index)
     });
   };
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Services"
-        description="Manage your service offerings"
-        action={{
-          label: 'Add Service',
-          onClick: handleCreate,
-          icon: Plus,
-        }}
-      />
+  const addApplication = () => {
+    if (!newApplication.trim()) {
+      alert('Please enter an application');
+      return;
+    }
 
-      <DataTable
-        data={state.services}
-        columns={columns}
-        onEdit={(item) => {
-          setEditingService(item);
-          setIsCreating(false);
-        }}
-        onDelete={setDeletingService}
-      />
+    setFormData({
+      ...formData,
+      applications: [...formData.applications, newApplication]
+    });
+    setNewApplication('');
+  };
+
+  const removeApplication = (index: number) => {
+    setFormData({
+      ...formData,
+      applications: formData.applications.filter((_, i) => i !== index)
+    });
+  };
+
+  const gradientOptions = [
+    { value: 'from-blue-500 to-blue-700', label: 'Blue' },
+    { value: 'from-green-500 to-green-700', label: 'Green' },
+    { value: 'from-purple-500 to-purple-700', label: 'Purple' },
+    { value: 'from-orange-500 to-orange-700', label: 'Orange' },
+    { value: 'from-red-500 to-red-700', label: 'Red' },
+    { value: 'from-indigo-500 to-indigo-700', label: 'Indigo' },
+    { value: 'from-pink-500 to-pink-700', label: 'Pink' },
+    { value: 'from-teal-500 to-teal-700', label: 'Teal' }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Services Management</h1>
+              <p className="text-gray-600 mt-1">Manage your service offerings and sub-services</p>
+            </div>
+            <button
+              onClick={handleCreate}
+              className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+            >
+              <Plus size={20} />
+              Add Service
+            </button>
+          </div>
+        </div>
+
+        {/* Services Grid */}
+        <div className="grid gap-6">
+          {services.map((service) => (
+            <div key={service.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start gap-4">
+                    <div className={`w-16 h-16 bg-gradient-to-br ${service.gradient} rounded-xl flex items-center justify-center text-3xl`}>
+                      {service.icon}
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900">{service.title}</h3>
+                      <p className="text-gray-600 mt-1">{service.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(service)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Edit size={20} />
+                    </button>
+                    <button
+                      onClick={() => setDeletingService(service)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6 mt-6">
+                  {/* Sub Services */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3">Specialized Services ({service.subServices.length})</h4>
+                    <ul className="space-y-2">
+                      {service.subServices.map((sub, idx) => (
+                        <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
+                          <span className="w-6 h-6 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-xs font-semibold">
+                            {String.fromCharCode(97 + idx)}
+                          </span>
+                          <span>{sub.title}</span>
+                          <span className="text-gray-400">→ Blog #{sub.blogId}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Applications */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3">Applications ({service.applications.length})</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {service.applications.map((app, idx) => (
+                        <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                          {app}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {services.length === 0 && (
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+            <p className="text-gray-500 text-lg">No services yet. Click "Add Service" to create one.</p>
+          </div>
+        )}
+      </div>
 
       {/* Edit/Create Modal */}
-      <FormModal
-        open={!!editingService}
-        onOpenChange={() => {
-          setEditingService(null);
-          setIsCreating(false);
-        }}
-        title={isCreating ? 'Add Service' : 'Edit Service'}
-        onSubmit={handleSave}
-        size="lg"
+      <Modal
+        isOpen={isCreating || editingService !== null}
+        onClose={handleCloseModal}
+        title={isCreating ? 'Create New Service' : 'Edit Service'}
       >
-        {editingService && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={editingService.title}
-                  onChange={(e) =>
-                    setEditingService({ ...editingService, title: e.target.value })
-                  }
-                  placeholder="Service title"
-                />
-              </div>
-              <div>
-                <Label htmlFor="icon">Icon Name (Lucide)</Label>
-                <Input
-                  id="icon"
-                  value={editingService.icon}
-                  onChange={(e) =>
-                    setEditingService({ ...editingService, icon: e.target.value })
-                  }
-                  placeholder="Wrench, Building, Droplets"
-                />
-              </div>
-            </div>
-
+        <div className="space-y-6">
+          {/* Basic Info */}
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={editingService.description}
-                onChange={(e) =>
-                  setEditingService({ ...editingService, description: e.target.value })
-                }
-                placeholder="Describe this service"
-                rows={3}
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Service Title *
+              </label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="e.g., Structural Engineering"
               />
             </div>
 
             <div>
-              <Label htmlFor="features">Features (one per line)</Label>
-              <Textarea
-                id="features"
-                value={editingService.features.join('\n')}
-                onChange={(e) => handleFeaturesChange(e.target.value)}
-                placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
-                rows={4}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="image">Image URL (optional)</Label>
-              <Input
-                id="image"
-                value={editingService.image || ''}
-                onChange={(e) =>
-                  setEditingService({ ...editingService, image: e.target.value })
-                }
-                placeholder="https://example.com/image.jpg"
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Icon (Emoji)
+              </label>
+              <input
+                type="text"
+                value={formData.icon}
+                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="🏗️"
               />
             </div>
           </div>
-        )}
-      </FormModal>
 
-      {/* Delete Confirmation */}
-      <DeleteConfirmModal
-        open={!!deletingService}
-        onOpenChange={() => setDeletingService(null)}
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Service ID (URL-friendly)
+            </label>
+            <input
+              type="text"
+              value={formData.id}
+              onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              placeholder="e.g., structural-engineering"
+              disabled={!isCreating}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Description *
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              rows={3}
+              placeholder="Describe this service..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Gradient Color
+            </label>
+            <select
+              value={formData.gradient}
+              onChange={(e) => setFormData({ ...formData, gradient: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            >
+              {gradientOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Sub Services Section */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Specialized Services (Clickable Links to Blog)</h3>
+            
+            <div className="space-y-3 mb-4">
+              {formData.subServices.map((sub, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <span className="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                    {String.fromCharCode(97 + idx)}
+                  </span>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{sub.title}</p>
+                    <p className="text-sm text-gray-500">Links to: /blog/{sub.blogId}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeSubService(idx)}
+                    className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={newSubService.title}
+                onChange={(e) => setNewSubService({ ...newSubService, title: e.target.value })}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Sub-service title"
+              />
+              <input
+                type="number"
+                value={newSubService.blogId || ''}
+                onChange={(e) => setNewSubService({ ...newSubService, blogId: parseInt(e.target.value) || 0 })}
+                className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Blog ID"
+                min="1"
+              />
+              <button
+                type="button"
+                onClick={addSubService}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors whitespace-nowrap"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Applications Section */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Applications</h3>
+            
+            <div className="flex flex-wrap gap-2 mb-4">
+              {formData.applications.map((app, idx) => (
+                <div key={idx} className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
+                  <span className="text-sm text-gray-700">{app}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeApplication(idx)}
+                    className="text-gray-500 hover:text-red-600 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={newApplication}
+                onChange={(e) => setNewApplication(e.target.value)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Application name"
+              />
+              <button
+                type="button"
+                onClick={addApplication}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors whitespace-nowrap"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex gap-3 justify-end border-t pt-6">
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+            >
+              {isCreating ? 'Create Service' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteModal
+        isOpen={deletingService !== null}
+        onClose={() => setDeletingService(null)}
         onConfirm={handleDelete}
-        title="Delete Service"
-        description={`Are you sure you want to delete "${deletingService?.title}"? This action cannot be undone.`}
+        itemName={deletingService?.title || ''}
       />
     </div>
   );
