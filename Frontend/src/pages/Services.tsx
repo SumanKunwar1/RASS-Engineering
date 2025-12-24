@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
 import { servicesData } from '../data/serviceData';
 
 const Services: React.FC = () => {
@@ -78,11 +77,7 @@ const Services: React.FC = () => {
                 >
                   <div className="grid lg:grid-cols-2 gap-12 items-center">
                     {/* Content */}
-                    <div>
-                      <div className={`w-16 h-16 bg-[#F46A1F]/10 rounded-xl flex items-center justify-center mb-6 text-3xl`}>
-                        {service.icon}
-                      </div>
-
+                    <div className={index % 2 === 0 ? '' : 'lg:order-2'}>
                       <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
                         {service.title}
                       </h2>
@@ -140,16 +135,19 @@ const Services: React.FC = () => {
                       </Link>
                     </div>
 
-                    {/* Image/Icon Display */}
-                    <div className="lg:col-start-2">
-                      <div className="relative rounded-2xl overflow-hidden shadow-xl group h-[400px]">
-                        <div className={`w-full h-full bg-gradient-to-br ${service.gradient} flex items-center justify-center`}>
-                          <div className="text-center">
-                            <div className="text-8xl mb-4">{service.icon}</div>
-                            <p className="text-white text-lg font-semibold px-4">{service.title}</p>
-                          </div>
+                    {/* Image Display */}
+                    <div className={index % 2 === 0 ? 'lg:col-start-2' : 'lg:order-1'}>
+                      <div className="relative rounded-2xl overflow-hidden shadow-xl group h-[500px]">
+                        <img
+                          src={service.image}
+                          alt={service.title}
+                          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-20 group-hover:opacity-30 transition-opacity`} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-8">
+                          <p className="text-white text-2xl font-bold">{service.title}</p>
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     </div>
                   </div>

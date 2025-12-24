@@ -10,6 +10,7 @@ export interface ServiceData {
   id: string;
   title: string;
   icon: string;
+  image?: string;
   description: string;
   subServices: SubService[];
   applications: string[];

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, Edit, Plus, X } from 'lucide-react';
+import { Trash2, Edit, Plus, X, Upload } from 'lucide-react';
 
 // Types
 interface SubService {
@@ -9,19 +9,18 @@ interface SubService {
 
 interface ServiceItem {
   id: string;
-  icon: string;
   title: string;
   description: string;
   subServices: SubService[];
   applications: string[];
   gradient: string;
+  image: string;
 }
 
 // Mock initial data
 const initialServices: ServiceItem[] = [
   {
     id: 'structural-engineering',
-    icon: '🏗️',
     title: 'Structural Engineering',
     description: 'Comprehensive structural design and analysis services for buildings and infrastructure projects.',
     subServices: [
@@ -30,11 +29,11 @@ const initialServices: ServiceItem[] = [
       { title: 'Seismic Analysis', blogId: 3 }
     ],
     applications: ['Residential', 'Commercial', 'Industrial', 'Infrastructure'],
-    gradient: 'from-blue-500 to-blue-700'
+    gradient: 'from-blue-500 to-blue-700',
+    image: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800'
   },
   {
     id: 'mep-services',
-    icon: '⚡',
     title: 'MEP Services',
     description: 'Mechanical, Electrical, and Plumbing design solutions for efficient building operations.',
     subServices: [
@@ -43,7 +42,8 @@ const initialServices: ServiceItem[] = [
       { title: 'Plumbing & Fire Protection', blogId: 6 }
     ],
     applications: ['Smart Buildings', 'Energy Efficiency', 'Sustainable Design'],
-    gradient: 'from-green-500 to-green-700'
+    gradient: 'from-green-500 to-green-700',
+    image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800'
   }
 ];
 
@@ -108,12 +108,12 @@ export default function AdminServices() {
   // Form state for editing
   const [formData, setFormData] = useState<ServiceItem>({
     id: '',
-    icon: '',
     title: '',
     description: '',
     subServices: [],
     applications: [],
-    gradient: 'from-blue-500 to-blue-700'
+    gradient: 'from-blue-500 to-blue-700',
+    image: ''
   });
 
   // Sub-service form state
@@ -123,12 +123,12 @@ export default function AdminServices() {
   const handleCreate = () => {
     setFormData({
       id: Date.now().toString(),
-      icon: '🏗️',
       title: '',
       description: '',
       subServices: [],
       applications: [],
-      gradient: 'from-blue-500 to-blue-700'
+      gradient: 'from-blue-500 to-blue-700',
+      image: ''
     });
     setIsCreating(true);
     setEditingService(null);
@@ -143,6 +143,11 @@ export default function AdminServices() {
   const handleSave = () => {
     if (!formData.title.trim()) {
       alert('Please enter a service title');
+      return;
+    }
+
+    if (!formData.image.trim()) {
+      alert('Please upload or provide an image URL');
       return;
     }
 
@@ -169,15 +174,37 @@ export default function AdminServices() {
     setIsCreating(false);
     setFormData({
       id: '',
-      icon: '',
       title: '',
       description: '',
       subServices: [],
       applications: [],
-      gradient: 'from-blue-500 to-blue-700'
+      gradient: 'from-blue-500 to-blue-700',
+      image: ''
     });
     setNewSubService({ title: '', blogId: 0 });
     setNewApplication('');
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Please upload a valid image file');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64String = event.target?.result as string;
+        setFormData({ ...formData, image: base64String });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const addSubService = () => {
@@ -258,8 +285,12 @@ export default function AdminServices() {
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start gap-4">
-                    <div className={`w-16 h-16 bg-gradient-to-br ${service.gradient} rounded-xl flex items-center justify-center text-3xl`}>
-                      {service.icon}
+                    <div className="w-24 h-24 rounded-xl overflow-hidden shadow-md flex-shrink-0">
+                      <img
+                        src={service.image}
+                        alt={service.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-gray-900">{service.title}</h3>
@@ -330,6 +361,62 @@ export default function AdminServices() {
         title={isCreating ? 'Create New Service' : 'Edit Service'}
       >
         <div className="space-y-6">
+          {/* Service Image Upload */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Service Image *
+            </label>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-500 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <Upload className="mx-auto text-gray-400 mb-2" size={40} />
+                    <p className="text-sm text-gray-600 mb-1">
+                      Click to upload image or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 5MB</p>
+                  </label>
+                </div>
+              </div>
+              {formData.image && (
+                <div className="w-40">
+                  <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                  <div className="relative">
+                    <img
+                      src={formData.image}
+                      alt="Preview"
+                      className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, image: '' })}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="mt-3">
+              <p className="text-sm text-gray-600 mb-2">Or paste image URL:</p>
+              <input
+                type="text"
+                value={formData.image.startsWith('data:') ? '' : formData.image}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+          </div>
+
           {/* Basic Info */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
@@ -347,30 +434,17 @@ export default function AdminServices() {
 
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Icon (Emoji)
+                Service ID (URL-friendly)
               </label>
               <input
                 type="text"
-                value={formData.icon}
-                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                value={formData.id}
+                onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="🏗️"
+                placeholder="e.g., structural-engineering"
+                disabled={!isCreating}
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Service ID (URL-friendly)
-            </label>
-            <input
-              type="text"
-              value={formData.id}
-              onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="e.g., structural-engineering"
-              disabled={!isCreating}
-            />
           </div>
 
           <div>
@@ -388,7 +462,7 @@ export default function AdminServices() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Gradient Color
+              Gradient Overlay Color
             </label>
             <select
               value={formData.gradient}
