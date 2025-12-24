@@ -17,11 +17,6 @@ export default function AdminLogin() {
   const { toast } = useToast();
   const { login, isAuthenticated } = useAdmin();
 
-  // Redirect if already logged in
-  if (isAuthenticated) {
-    return <Navigate to="/admin" replace />;
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);

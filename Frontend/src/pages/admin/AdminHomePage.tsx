@@ -115,19 +115,22 @@ export default function AdminHome() {
 
   // ==================== HERO SECTION HANDLERS ====================
   const handleSaveHero = (e: React.FormEvent) => {
-    e.preventDefault();
-    const updatedHero = {
-      ...heroData,
-      title: heroTitle,
-      titleHighlight: heroTitleHighlight,
-      subtitle: heroSubtitle,
-      buttons: heroButtons,
-      images: heroImages
-    };
-    dispatch({ type: 'SET_HERO', payload: updatedHero });
-    setIsEditingHero(false);
-    toast.success('Hero section updated successfully!');
+  e.preventDefault();
+  const updatedHero = {
+    ...heroData,
+    title: heroTitle,
+    titleHighlight: heroTitleHighlight,
+    subtitle: heroSubtitle,
+    buttons: heroButtons,
+    images: heroImages
   };
+  dispatch({ 
+    type: 'SET_HERO' as const, 
+    payload: updatedHero 
+  });
+  setIsEditingHero(false);
+  toast.success('Hero section updated successfully!');
+};
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -194,12 +197,15 @@ export default function AdminHome() {
   };
 
   // ==================== ABOUT SECTION HANDLERS ====================
-  const handleSaveAbout = (e: React.FormEvent) => {
-    e.preventDefault();
-    dispatch({ type: 'SET_ABOUT', payload: aboutData });
-    setIsEditingAbout(false);
-    toast.success('About section updated successfully!');
-  };
+ const handleSaveAbout = (e: React.FormEvent) => {
+  e.preventDefault();
+  dispatch({ 
+    type: 'SET_ABOUT' as const, 
+    payload: aboutData as any
+  });
+  setIsEditingAbout(false);
+  toast.success('About section updated successfully!');
+};
 
   const handleAboutImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -250,12 +256,15 @@ export default function AdminHome() {
   };
 
   // ==================== CONTACT INFO HANDLERS ====================
-  const handleSaveContact = (e: React.FormEvent) => {
-    e.preventDefault();
-    dispatch({ type: 'SET_CONTACT', payload: contactData });
-    setIsEditingContact(false);
-    toast.success('Contact information updated successfully!');
-  };
+ const handleSaveContact = (e: React.FormEvent) => {
+  e.preventDefault();
+  dispatch({ 
+    type: 'SET_CONTACT' as const, 
+    payload: contactData 
+  });
+  setIsEditingContact(false);
+  toast.success('Contact information updated successfully!');
+};
 
   return (
     <div className="space-y-6">
