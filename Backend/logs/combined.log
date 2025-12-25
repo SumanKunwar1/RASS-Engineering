@@ -1,0 +1,17 @@
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 15:24:22"}
+{"level":"info","message":"🚀 Server running on port 6000 in development mode","timestamp":"2025-12-25 15:24:22"}
+{"level":"info","message":"📍 Server URL: http://localhost:6000","timestamp":"2025-12-25 15:24:22"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 15:24:22"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-02.rttgmtn.mongodb.net","timestamp":"2025-12-25 15:24:23"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 15:24:23"}
+{"level":"info","message":"✅ Default admin user created successfully","timestamp":"2025-12-25 15:24:24"}
+{"level":"info","message":"📧 Email: admin@rass.com","timestamp":"2025-12-25 15:24:24"}
+{"level":"info","message":"🔑 Password: admin123","timestamp":"2025-12-25 15:24:24"}
+{"level":"info","message":"⚠️  Please change the password after first login!","timestamp":"2025-12-25 15:24:24"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 15:34:50"}
+{"level":"info","message":"🚀 Server running on port 6000 in development mode","timestamp":"2025-12-25 15:34:50"}
+{"level":"info","message":"📍 Server URL: http://localhost:6000","timestamp":"2025-12-25 15:34:50"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 15:34:50"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-25 15:34:51"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 15:34:51"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 15:34:51"}

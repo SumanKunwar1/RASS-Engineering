@@ -134,4 +134,4 @@ export const changePassword = asyncHandler(async (req: Request, res: Response, n
     success: true,
     message: 'Password changed successfully'
   });
-});
+})
