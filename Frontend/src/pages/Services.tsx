@@ -1,12 +1,54 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { servicesData } from '../data/serviceData';
+import { Loader2 } from 'lucide-react';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+interface SubService {
+  title: string;
+  blogId: string;
+}
+
+interface Service {
+  _id: string;
+  title: string;
+  description: string;
+  subServices: SubService[];
+  applications: string[];
+  gradient: string;
+  image: string;
+  slug: string;
+}
 
 const Services: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await axios.get(`${API_BASE_URL}/services`);
+        console.log('Fetched services:', response.data);
+        setServices(response.data.data || []);
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'Failed to fetch services');
+        console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   useEffect(() => {
     if (location.hash) {
@@ -15,9 +57,10 @@ const Services: React.FC = () => {
         element.scrollIntoView({ behavior: 'smooth' });
       }
     }
-  }, [location]);
+  }, [location, services]);
 
-  const handleSubServiceClick = (blogId: number) => {
+  const handleSubServiceClick = (blogId: string) => {
+    console.log('Navigating to blog:', blogId);
     navigate(`/blog/${blogId}`);
   };
 
@@ -64,11 +107,23 @@ const Services: React.FC = () => {
         {/* Services Detail Sections */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {servicesData.map((service, index) => {
-              return (
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="animate-spin text-[#F46A1F]" size={48} />
+              </div>
+            ) : error ? (
+              <div className="text-center py-20">
+                <p className="text-red-600 text-lg">{error}</p>
+              </div>
+            ) : services.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-gray-600 text-lg">No services available yet.</p>
+              </div>
+            ) : (
+              services.map((service, index) => (
                 <motion.div
-                  key={service.id}
-                  id={service.id}
+                  key={service._id}
+                  id={service.slug}
                   initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -87,46 +142,50 @@ const Services: React.FC = () => {
                       </p>
 
                       {/* Sub Services - Clickable List */}
-                      <div className="mb-8">
-                        <h3 className="text-xl font-bold text-black mb-4">Our Specialized Services</h3>
-                        <ul className="space-y-3">
-                          {service.subServices.map((subService, idx) => (
-                            <li 
-                              key={idx}
-                              onClick={() => handleSubServiceClick(subService.blogId)}
-                              className="flex items-start space-x-3 cursor-pointer group"
-                            >
-                              <div className="w-6 h-6 rounded-full bg-[#F46A1F]/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[#F46A1F]/40 transition-colors">
-                                <span className="text-[#F46A1F] font-semibold text-sm">{String.fromCharCode(97 + idx)}</span>
-                              </div>
-                              <span className="text-gray-700 group-hover:text-[#F46A1F] transition-colors group-hover:font-semibold">
-                                {subService.title}
-                              </span>
-                              <div className="flex-1" />
-                              <div className="text-[#F46A1F] opacity-0 group-hover:opacity-100 transition-opacity">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                      {service.subServices && service.subServices.length > 0 && (
+                        <div className="mb-8">
+                          <h3 className="text-xl font-bold text-black mb-4">Our Specialized Services</h3>
+                          <ul className="space-y-3">
+                            {service.subServices.map((subService, idx) => (
+                              <li 
+                                key={idx}
+                                onClick={() => handleSubServiceClick(subService.blogId)}
+                                className="flex items-start space-x-3 cursor-pointer group"
+                              >
+                                <div className="w-6 h-6 rounded-full bg-[#F46A1F]/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[#F46A1F]/40 transition-colors">
+                                  <span className="text-[#F46A1F] font-semibold text-sm">{String.fromCharCode(97 + idx)}</span>
+                                </div>
+                                <span className="text-gray-700 group-hover:text-[#F46A1F] transition-colors group-hover:font-semibold">
+                                  {subService.title}
+                                </span>
+                                <div className="flex-1" />
+                                <div className="text-[#F46A1F] opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
 
                       {/* Applications */}
-                      <div className="mb-8">
-                        <h3 className="text-xl font-bold text-black mb-3">Applications</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {service.applications.map((app, idx) => (
-                            <span
-                              key={idx}
-                              className="px-4 py-2 bg-[#F4F4F4] text-gray-700 rounded-full text-sm hover:bg-[#F46A1F] hover:text-white transition-colors"
-                            >
-                              {app}
-                            </span>
-                          ))}
+                      {service.applications && service.applications.length > 0 && (
+                        <div className="mb-8">
+                          <h3 className="text-xl font-bold text-black mb-3">Applications</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {service.applications.map((app, idx) => (
+                              <span
+                                key={idx}
+                                className="px-4 py-2 bg-[#F4F4F4] text-gray-700 rounded-full text-sm hover:bg-[#F46A1F] hover:text-white transition-colors"
+                              >
+                                {app}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       <Link to="/request-quote">
                         <button className="bg-[#F46A1F] hover:bg-[#d85a15] text-white px-6 py-3 rounded-lg font-semibold transition-colors">
@@ -152,8 +211,8 @@ const Services: React.FC = () => {
                     </div>
                   </div>
                 </motion.div>
-              );
-            })}
+              ))
+            )}
           </div>
         </section>
 

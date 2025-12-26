@@ -13,6 +13,7 @@ import adminRoutes from './routes/admin.routes';
 import uploadRoutes from './routes/upload.routes';
 import projectRoutes from './routes/project.routes';
 import blogRoutes from './routes/blog.routes';
+import serviceRoutes from './routes/service.routes';
 
 const app: Application = express();
 
@@ -69,6 +70,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/blogs', blogRoutes);
+app.use('/api/services', serviceRoutes);
 
 // 404 Handler
 app.use('*', (req: Request, res: Response) => {
