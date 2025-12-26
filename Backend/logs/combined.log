@@ -207,3 +207,27 @@
 {"level":"error","message":"Cloudinary delete error: Failed to delete image: not found","stack":"Error: Failed to delete image: not found\n    at deleteImageFromCloudinary (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\utils\\cloudinary.utils.ts:92:13)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:116:5","timestamp":"2025-12-26 13:56:33"}
 {"level":"error","message":"Delete error: Failed to delete image: Failed to delete image: not found","timestamp":"2025-12-26 13:56:33"}
 {"level":"error","message":"Failed to delete image: Failed to delete image: not found","method":"DELETE","stack":"Error: Failed to delete image: Failed to delete image: not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:126:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 13:56:33","url":"/api/upload/image"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 14:00:15"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 14:00:15"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 14:00:15"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 14:00:15"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-26 14:00:16"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 14:00:16"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 14:00:17"}
+{"level":"info","message":"Extracted public_id: WhatsApp_Image_2025-12-21_at_14.10.49_itbaq8 from URL: https://res.cloudinary.com/dihev9qxc/image/upload/v1766306898/WhatsApp_Image_2025-12-21_at_14.10.49_itbaq8.jpg","timestamp":"2025-12-26 14:03:09"}
+{"level":"info","message":"Image deleted from Cloudinary: WhatsApp_Image_2025-12-21_at_14.10.49_itbaq8 - not found","timestamp":"2025-12-26 14:03:10"}
+{"level":"info","message":"Image deleted by admin: admin@rass.com - WhatsApp_Image_2025-12-21_at_14.10.49_itbaq8","timestamp":"2025-12-26 14:03:10"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/hero-images/qlxdoaudnh9tp85ikuji","timestamp":"2025-12-26 14:03:39"}
+{"level":"info","message":"1 images uploaded to Cloudinary","timestamp":"2025-12-26 14:03:39"}
+{"level":"info","message":"1 hero images uploaded by admin: admin@rass.com","timestamp":"2025-12-26 14:03:39"}
+{"level":"info","message":"Extracted public_id: WhatsApp_Image_2025-12-21_at_14.10.49_itbaq8 from URL: https://res.cloudinary.com/dihev9qxc/image/upload/v1766306898/WhatsApp_Image_2025-12-21_at_14.10.49_itbaq8.jpg","timestamp":"2025-12-26 14:09:45"}
+{"level":"info","message":"Image deleted from Cloudinary: WhatsApp_Image_2025-12-21_at_14.10.49_itbaq8 - not found","timestamp":"2025-12-26 14:09:47"}
+{"level":"info","message":"Image deleted by admin: admin@rass.com - WhatsApp_Image_2025-12-21_at_14.10.49_itbaq8","timestamp":"2025-12-26 14:09:47"}
+{"level":"info","message":"Hero section updated by admin: admin@rass.com","timestamp":"2025-12-26 14:09:47"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/hero-images/zgzcmnclohcjsrbshfx0","timestamp":"2025-12-26 14:10:02"}
+{"level":"info","message":"1 images uploaded to Cloudinary","timestamp":"2025-12-26 14:10:02"}
+{"level":"info","message":"1 hero images uploaded by admin: admin@rass.com","timestamp":"2025-12-26 14:10:02"}
+{"level":"info","message":"Hero section updated by admin: admin@rass.com","timestamp":"2025-12-26 14:10:02"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/about/h0rm35vggvjogcpi2vlg","timestamp":"2025-12-26 14:10:35"}
+{"level":"info","message":"About image uploaded by admin: admin@rass.com","timestamp":"2025-12-26 14:10:35"}
+{"level":"info","message":"About section updated by admin: admin@rass.com","timestamp":"2025-12-26 14:10:35"}

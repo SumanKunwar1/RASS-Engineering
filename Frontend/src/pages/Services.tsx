@@ -55,7 +55,7 @@ const Services: React.FC = () => {
                 Our <span className="text-[#F46A1F]">Services</span>
               </h1>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Comprehensive construction and engineering solutions backed by 31+ years of expertise
+                Comprehensive construction and engineering solutions backed by 32+ years of expertise
               </p>
             </motion.div>
           </div>
