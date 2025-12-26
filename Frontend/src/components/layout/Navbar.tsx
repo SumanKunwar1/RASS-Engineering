@@ -3,12 +3,22 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { companyInfo } from '../../data/mockData';
-import { servicesData } from '../../data/serviceData';
 import { Button } from '../ui/button';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 interface NavLink {
   name: string;
   path: string;
+}
+
+interface Service {
+  _id: string;
+  title: string;
+  icon: string;
+  slug: string;
+  subServices: any[];
 }
 
 const Navbar: FC = () => {
@@ -16,7 +26,22 @@ const Navbar: FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isServicesDropdownOpen, setIsServicesDropdownOpen] = useState<boolean>(false);
   const [isMobileServicesOpen, setIsMobileServicesOpen] = useState<boolean>(false);
+  const [services, setServices] = useState<Service[]>([]);
   const location = useLocation();
+
+  // Fetch services
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/services`);
+        setServices(response.data.data || []);
+      } catch (err) {
+        console.error('Failed to fetch services:', err);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   useEffect(() => {
     const handleScroll = (): void => {
@@ -26,7 +51,7 @@ const Navbar: FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close dropdown when clicking outside or after a delay
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -46,22 +71,22 @@ const Navbar: FC = () => {
     { name: 'Contact', path: '/contact' }
   ];
 
-  const handleServiceClick = (serviceId: string) => {
+  const handleServiceClick = (serviceSlug: string) => {
     setIsServicesDropdownOpen(false);
     setIsMobileMenuOpen(false);
     setIsMobileServicesOpen(false);
     
     // If we're already on the services page, scroll to the service
     if (location.pathname === '/services') {
-      const element = document.getElementById(serviceId);
+      const element = document.getElementById(serviceSlug);
       if (element) {
         setTimeout(() => {
           element.scrollIntoView({ behavior: 'smooth' });
-        }, 0);
+        }, 100);
       }
     } else {
       // Navigate to services page with hash
-      window.location.href = `/services#${serviceId}`;
+      window.location.href = `/services#${serviceSlug}`;
     }
   };
 
@@ -130,26 +155,26 @@ const Navbar: FC = () => {
               </Link>
 
               {/* Dropdown Menu */}
-              {isServicesDropdownOpen && (
+              {isServicesDropdownOpen && services.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   className="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50"
                 >
-                  {servicesData.map((service) => (
+                  {services.map((service) => (
                     <button
-                      key={service.id}
-                      onClick={() => handleServiceClick(service.id)}
+                      key={service._id}
+                      onClick={() => handleServiceClick(service.slug)}
                       className="w-full text-left px-5 py-4 hover:bg-[#F46A1F]/10 transition-colors border-b border-gray-100 last:border-b-0 flex items-start gap-3 group"
                     >
-                      <span className="text-2xl mt-1">{service.icon}</span>
+                      <span className="text-2xl mt-1">{service.icon || '🏗️'}</span>
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900 group-hover:text-[#F46A1F] transition-colors text-sm">
                           {service.title}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {service.subServices.length} specialized services
+                          {service.subServices?.length || 0} specialized services
                         </p>
                       </div>
                       <svg
@@ -246,42 +271,44 @@ const Navbar: FC = () => {
             </Link>
 
             {/* Mobile Services Submenu */}
-            <div className="pl-4 border-l-2 border-gray-200">
-              <button
-                onClick={() => setIsMobileServicesOpen(!isMobileServicesOpen)}
-                className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-between"
-              >
-                View All Services
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform duration-300 ${
-                    isMobileServicesOpen ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
-
-              {isMobileServicesOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-2 space-y-1"
+            {services.length > 0 && (
+              <div className="pl-4 border-l-2 border-gray-200">
+                <button
+                  onClick={() => setIsMobileServicesOpen(!isMobileServicesOpen)}
+                  className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-between"
                 >
-                  {servicesData.map((service) => (
-                    <button
-                      key={service.id}
-                      onClick={() => handleServiceClick(service.id)}
-                      className="w-full text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-[#F46A1F]/10 hover:text-[#F46A1F] transition-all flex items-start gap-2"
-                    >
-                      <span className="text-lg">{service.icon}</span>
-                      <div className="flex-1">
-                        <p className="font-medium">{service.title}</p>
-                      </div>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </div>
+                  View All Services
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform duration-300 ${
+                      isMobileServicesOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                {isMobileServicesOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 space-y-1"
+                  >
+                    {services.map((service) => (
+                      <button
+                        key={service._id}
+                        onClick={() => handleServiceClick(service.slug)}
+                        className="w-full text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-[#F46A1F]/10 hover:text-[#F46A1F] transition-all flex items-start gap-2"
+                      >
+                        <span className="text-lg">{service.icon || '🏗️'}</span>
+                        <div className="flex-1">
+                          <p className="font-medium">{service.title}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
+            )}
 
             {/* Projects, Blog, Contact links */}
             {navLinks.slice(2).map((link: NavLink) => (

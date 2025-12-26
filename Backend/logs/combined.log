@@ -446,3 +446,20 @@
 {"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-02.rttgmtn.mongodb.net","timestamp":"2025-12-26 17:05:06"}
 {"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 17:05:06"}
 {"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 17:05:06"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 17:05:47"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 17:05:47"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 17:05:47"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 17:05:47"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-01.rttgmtn.mongodb.net","timestamp":"2025-12-26 17:05:48"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 17:05:48"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 17:05:49"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/services/etvy3xo2vhg41mf5pdk2","timestamp":"2025-12-26 17:08:42"}
+{"level":"info","message":"Service created by admin: admin@rass.com - Waterproofing Protection Treatment","timestamp":"2025-12-26 17:08:42"}
+{"level":"info","message":"Service updated by admin: admin@rass.com - Waterproofing Protection Treatment","timestamp":"2025-12-26 17:10:09"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 17:21:18"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 17:21:18"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 17:21:18"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 17:21:19"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-26 17:21:19"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 17:21:19"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 17:21:20"}
