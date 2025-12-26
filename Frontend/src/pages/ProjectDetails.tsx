@@ -1,24 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, MapPin, Calendar, User, CheckCircle2, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, User, CheckCircle2, ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { projectsData } from '../data/mockData';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+interface Project {
+  _id: string;
+  title: string;
+  category: string;
+  location: string;
+  year: string;
+  client: string;
+  description: string;
+  scope: string[];
+  challenges: string;
+  solution: string;
+  results: string[];
+  image: string;
+  gallery: { url: string; publicId: string }[];
+}
 
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const project = projectsData.find(p => p.id === parseInt(id || '0'));
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  if (!project) {
+  useEffect(() => {
+    const fetchProject = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await axios.get(`${API_BASE_URL}/projects/${id}`);
+        setProject(response.data.data);
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'Failed to fetch project');
+        console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchProject();
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-32 flex items-center justify-center">
+        <Loader2 className="animate-spin text-[#F46A1F]" size={48} />
+      </div>
+    );
+  }
+
+  if (error || !project) {
     return (
       <div className="min-h-screen pt-32 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-black mb-4">Project Not Found</h1>
+          <h1 className="text-4xl font-bold text-black mb-4">{error || 'Project Not Found'}</h1>
           <Link to="/projects">
             <Button className="bg-[#F46A1F] hover:bg-[#d85a15] text-white">
               Back to Projects
@@ -30,8 +77,9 @@ const ProjectDetail: React.FC = () => {
   }
 
   // Gallery display settings
-  const displayedImages = project.gallery.slice(0, 4);
-  const remainingImages = Math.max(0, project.gallery.length - 4);
+  const galleryUrls = project.gallery.map(img => img.url);
+  const displayedImages = galleryUrls.slice(0, 4);
+  const remainingImages = Math.max(0, galleryUrls.length - 4);
 
   const handleImageClick = (index: number) => {
     setCurrentImageIndex(index);
@@ -40,16 +88,15 @@ const ProjectDetail: React.FC = () => {
 
   const handleViewAllGallery = () => {
     setCurrentImageIndex(0);
-    setIsGalleryOpen(true);
     setIsLightboxOpen(true);
   };
 
   const handleNextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % project.gallery.length);
+    setCurrentImageIndex((prev) => (prev + 1) % galleryUrls.length);
   };
 
   const handlePreviousImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + project.gallery.length) % project.gallery.length);
+    setCurrentImageIndex((prev) => (prev - 1 + galleryUrls.length) % galleryUrls.length);
   };
 
   const handleCloseLightbox = () => {
@@ -61,7 +108,7 @@ const ProjectDetail: React.FC = () => {
       <Helmet>
         <title>{project.title} | RASS Engineering</title>
         <meta name="description" content={project.description} />
-        <link rel="canonical" href={`/projects/${project.id}`} />
+        <link rel="canonical" href={`/projects/${project._id}`} />
       </Helmet>
 
       <div className="min-h-screen">
@@ -124,111 +171,121 @@ const ProjectDetail: React.FC = () => {
                 </motion.div>
 
                 {/* Scope of Work */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.1 }}
-                >
-                  <h3 className="text-2xl font-bold text-black mb-4">Scope of Work</h3>
-                  <ul className="space-y-2">
-                    {project.scope.map((item, index) => (
-                      <li key={index} className="flex items-start space-x-3">
-                        <CheckCircle2 className="text-[#F46A1F] flex-shrink-0 mt-0.5" size={20} />
-                        <span className="text-gray-600">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </motion.div>
+                {project.scope && project.scope.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.1 }}
+                  >
+                    <h3 className="text-2xl font-bold text-black mb-4">Scope of Work</h3>
+                    <ul className="space-y-2">
+                      {project.scope.map((item, index) => (
+                        <li key={index} className="flex items-start space-x-3">
+                          <CheckCircle2 className="text-[#F46A1F] flex-shrink-0 mt-0.5" size={20} />
+                          <span className="text-gray-600">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                )}
 
                 {/* Challenge */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.2 }}
-                  className="bg-[#F4F4F4] p-6 rounded-2xl"
-                >
-                  <h3 className="text-2xl font-bold text-black mb-3">The Challenge</h3>
-                  <p className="text-gray-600 leading-relaxed">{project.challenges}</p>
-                </motion.div>
+                {project.challenges && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.2 }}
+                    className="bg-[#F4F4F4] p-6 rounded-2xl"
+                  >
+                    <h3 className="text-2xl font-bold text-black mb-3">The Challenge</h3>
+                    <p className="text-gray-600 leading-relaxed">{project.challenges}</p>
+                  </motion.div>
+                )}
 
                 {/* Solution */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.3 }}
-                  className="bg-[#F4F4F4] p-6 rounded-2xl"
-                >
-                  <h3 className="text-2xl font-bold text-black mb-3">Our Solution</h3>
-                  <p className="text-gray-600 leading-relaxed">{project.solution}</p>
-                </motion.div>
+                {project.solution && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.3 }}
+                    className="bg-[#F4F4F4] p-6 rounded-2xl"
+                  >
+                    <h3 className="text-2xl font-bold text-black mb-3">Our Solution</h3>
+                    <p className="text-gray-600 leading-relaxed">{project.solution}</p>
+                  </motion.div>
+                )}
 
                 {/* Results */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.4 }}
-                >
-                  <h3 className="text-2xl font-bold text-black mb-4">Results Achieved</h3>
-                  <ul className="space-y-2">
-                    {project.results.map((result, index) => (
-                      <li key={index} className="flex items-start space-x-3">
-                        <CheckCircle2 className="text-[#F46A1F] flex-shrink-0 mt-0.5" size={20} />
-                        <span className="text-gray-600">{result}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </motion.div>
+                {project.results && project.results.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.4 }}
+                  >
+                    <h3 className="text-2xl font-bold text-black mb-4">Results Achieved</h3>
+                    <ul className="space-y-2">
+                      {project.results.map((result, index) => (
+                        <li key={index} className="flex items-start space-x-3">
+                          <CheckCircle2 className="text-[#F46A1F] flex-shrink-0 mt-0.5" size={20} />
+                          <span className="text-gray-600">{result}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                )}
 
                 {/* Gallery */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.5 }}
-                >
-                  <h3 className="text-2xl font-bold text-black mb-6">Project Gallery</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {displayedImages.map((image, index) => (
-                      <motion.div
-                        key={index}
-                        whileHover={{ scale: 1.02 }}
-                        className="relative h-64 rounded-xl overflow-hidden group cursor-pointer"
-                        onClick={() => handleImageClick(index)}
-                      >
-                        <img
-                          src={image}
-                          alt={`${project.title} ${index + 1}`}
-                          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 13H7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-
-                    {/* +X More Images */}
-                    {remainingImages > 0 && (
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        className="relative h-64 rounded-xl overflow-hidden group cursor-pointer bg-gradient-to-br from-[#F46A1F] to-[#d85a15]"
-                        onClick={handleViewAllGallery}
-                      >
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center">
-                            <div className="text-6xl font-bold text-white mb-2">
-                              +{remainingImages}
+                {galleryUrls.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.5 }}
+                  >
+                    <h3 className="text-2xl font-bold text-black mb-6">Project Gallery</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {displayedImages.map((image, index) => (
+                        <motion.div
+                          key={index}
+                          whileHover={{ scale: 1.02 }}
+                          className="relative h-64 rounded-xl overflow-hidden group cursor-pointer"
+                          onClick={() => handleImageClick(index)}
+                        >
+                          <img
+                            src={image}
+                            alt={`${project.title} ${index + 1}`}
+                            className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 13H7" />
+                              </svg>
                             </div>
-                            <p className="text-white text-lg font-semibold">More Images</p>
                           </div>
-                        </div>
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
+                        </motion.div>
+                      ))}
+
+                      {/* +X More Images */}
+                      {remainingImages > 0 && (
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          className="relative h-64 rounded-xl overflow-hidden group cursor-pointer bg-gradient-to-br from-[#F46A1F] to-[#d85a15]"
+                          onClick={handleViewAllGallery}
+                        >
+                          <div className="w-full h-full flex items-center justify-center">
+                            <div className="text-center">
+                              <div className="text-6xl font-bold text-white mb-2">
+                                +{remainingImages}
+                              </div>
+                              <p className="text-white text-lg font-semibold">More Images</p>
+                            </div>
+                          </div>
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+                        </motion.div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
               </div>
 
               {/* Sidebar */}
@@ -310,13 +367,13 @@ const ProjectDetail: React.FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={project.gallery[currentImageIndex]}
+                src={galleryUrls[currentImageIndex]}
                 alt={`${project.title} ${currentImageIndex + 1}`}
                 className="max-w-full max-h-[80vh] object-contain rounded-lg"
               />
 
               {/* Navigation Buttons */}
-              {project.gallery.length > 1 && (
+              {galleryUrls.length > 1 && (
                 <>
                   {/* Previous Button */}
                   <button
@@ -344,21 +401,21 @@ const ProjectDetail: React.FC = () => {
 
                   {/* Image Counter */}
                   <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                    {currentImageIndex + 1} / {project.gallery.length}
+                    {currentImageIndex + 1} / {galleryUrls.length}
                   </div>
                 </>
               )}
             </motion.div>
 
             {/* Thumbnail Navigation */}
-            {project.gallery.length > 1 && (
+            {galleryUrls.length > 1 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
                 className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 overflow-x-auto max-w-[90vw] pb-2"
               >
-                {project.gallery.map((image, index) => (
+                {galleryUrls.map((image, index) => (
                   <button
                     key={index}
                     onClick={(e) => {

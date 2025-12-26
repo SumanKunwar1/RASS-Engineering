@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { Plus, Upload, X, Image as ImageIcon, Trash2, Edit } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Upload, X, Image as ImageIcon, Trash2, Edit, AlertCircle, Loader2 } from 'lucide-react';
+import axios from 'axios';
 
-// Mock data structure
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 interface ProjectData {
-  id: number;
+  _id?: string;
   title: string;
   category: string;
   location: string;
@@ -15,41 +17,39 @@ interface ProjectData {
   solution: string;
   results: string[];
   image: string;
-  gallery: string[];
+  imagePublicId?: string;
+  gallery: { url: string; publicId: string }[];
+  isActive?: boolean;
 }
 
-// Initial mock projects
-const initialProjects: ProjectData[] = [
-  {
-    id: 1,
-    title: 'Kathmandu Corporate Tower Waterproofing',
-    category: 'Waterproofing',
-    location: 'Kathmandu, Nepal',
-    year: '2024',
-    client: 'Confidential',
-    description: 'Complete waterproofing solution for a 15-story corporate tower including basement, terrace, and facade treatment.',
-    scope: ['Basement waterproofing', 'Terrace treatment', 'Facade protection', 'Water tank sealing'],
-    challenges: 'Working on an occupied building required careful planning and execution without disrupting daily operations.',
-    solution: 'Implemented advanced membrane waterproofing system with minimal disruption using weekend and night shifts.',
-    results: ['Zero leakage post-treatment', '100% client satisfaction', 'Completed 2 weeks ahead of schedule'],
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80',
-      'https://images.unsplash.com/photo-1460472178825-e5240623afd5?w=800&q=80',
-    ]
-  }
-];
+const getAuthToken = () => localStorage.getItem('rass_admin_token');
+
+const createAxiosInstance = () => {
+  const instance = axios.create({
+    baseURL: API_BASE_URL,
+    headers: { Authorization: `Bearer ${getAuthToken()}` }
+  });
+
+  instance.interceptors.request.use((config) => {
+    const token = getAuthToken();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
+
+  return instance;
+};
 
 export default function AdminProjects() {
-  const [projects, setProjects] = useState<ProjectData[]>(initialProjects);
+  const [projects, setProjects] = useState<ProjectData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectData | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'images'>('basic');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Form state
   const [formData, setFormData] = useState<ProjectData>({
-    id: 0,
     title: '',
     category: '',
     location: '',
@@ -67,23 +67,63 @@ export default function AdminProjects() {
   const [scopeInput, setScopeInput] = useState('');
   const [resultsInput, setResultsInput] = useState('');
 
-  // Image upload handler
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'main' | 'gallery') => {
+  const categories = ['Waterproofing', 'Structural Retrofitting', 'Epoxy Flooring', 'ACP Cladding', 'Metal Fabrication', 'Expansion Joint'];
+
+  // Fetch all projects
+  const fetchProjects = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const axiosInstance = createAxiosInstance();
+      const response = await axiosInstance.get('/projects');
+      setProjects(response.data.data || []);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to fetch projects');
+      console.error('Fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'main' | 'gallery') => {
     const files = e.target.files;
     if (!files) return;
 
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        if (type === 'main') {
-          setFormData(prev => ({ ...prev, image: base64String }));
-        } else {
-          setFormData(prev => ({ ...prev, gallery: [...prev.gallery, base64String] }));
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      const fileArray = Array.from(files);
+      const base64Promises = fileArray.map(file => fileToBase64(file));
+      const base64Results = await Promise.all(base64Promises);
+
+      if (type === 'main') {
+        setFormData(prev => ({ ...prev, image: base64Results[0] }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          gallery: [
+            ...prev.gallery,
+            ...base64Results.map(base64 => ({ url: base64, publicId: '' }))
+          ]
+        }));
+      }
+    } catch (err) {
+      console.error('Image upload error:', err);
+      setError('Failed to process image');
+    }
   };
 
   const removeGalleryImage = (index: number) => {
@@ -96,7 +136,6 @@ export default function AdminProjects() {
   const handleCreate = () => {
     setEditingProject(null);
     setFormData({
-      id: Date.now(),
       title: '',
       category: '',
       location: '',
@@ -113,6 +152,7 @@ export default function AdminProjects() {
     setScopeInput('');
     setResultsInput('');
     setActiveTab('basic');
+    setError(null);
     setIsModalOpen(true);
   };
 
@@ -122,32 +162,62 @@ export default function AdminProjects() {
     setScopeInput(project.scope.join('\n'));
     setResultsInput(project.results.join('\n'));
     setActiveTab('basic');
+    setError(null);
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
-    const projectToSave = {
-      ...formData,
-      scope: scopeInput.split('\n').filter(s => s.trim()),
-      results: resultsInput.split('\n').filter(r => r.trim())
-    };
+  const handleSave = async () => {
+    setError(null);
 
-    if (editingProject) {
-      setProjects(prev => prev.map(p => p.id === projectToSave.id ? projectToSave : p));
-    } else {
-      setProjects(prev => [...prev, projectToSave]);
+    // Validation
+    if (!formData.title || !formData.category || !formData.location || !formData.year || 
+        !formData.client || !formData.description || !formData.image) {
+      setError('Please fill all required fields');
+      return;
     }
 
-    setIsModalOpen(false);
-    setEditingProject(null);
+    setSaving(true);
+
+    try {
+      const axiosInstance = createAxiosInstance();
+      
+      const projectToSave = {
+        ...formData,
+        scope: scopeInput.split('\n').filter(s => s.trim()),
+        results: resultsInput.split('\n').filter(r => r.trim()),
+        gallery: formData.gallery.map(img => typeof img === 'string' ? img : img.url)
+      };
+
+      if (editingProject && editingProject._id) {
+        // Update existing project
+        await axiosInstance.put(`/projects/${editingProject._id}`, projectToSave);
+      } else {
+        // Create new project
+        await axiosInstance.post('/projects', projectToSave);
+      }
+
+      await fetchProjects();
+      setIsModalOpen(false);
+      setEditingProject(null);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to save project');
+      console.error('Save error:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    setProjects(prev => prev.filter(p => p.id !== id));
-    setDeleteConfirm(null);
+  const handleDelete = async (id: string) => {
+    try {
+      const axiosInstance = createAxiosInstance();
+      await axiosInstance.delete(`/projects/${id}`);
+      await fetchProjects();
+      setDeleteConfirm(null);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete project');
+      console.error('Delete error:', err);
+    }
   };
-
-  const categories = ['Waterproofing', 'Structural Retrofitting', 'Epoxy Flooring', 'ACP Cladding', 'Metal Fabrication', 'Expansion Joint'];
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -167,42 +237,60 @@ export default function AdminProjects() {
           </button>
         </div>
 
-        {/* Projects Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map(project => (
-            <div key={project.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-              <div className="relative h-48">
-                <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
-                <div className="absolute top-3 right-3 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                  {project.category}
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+            <AlertCircle size={20} />
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="ml-auto">
+              <X size={20} />
+            </button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="animate-spin text-orange-500" size={48} />
+          </div>
+        ) : (
+          /* Projects Grid */
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map(project => (
+              <div key={project._id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                <div className="relative h-48">
+                  <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
+                  <div className="absolute top-3 right-3 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    {project.category}
+                  </div>
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{project.title}</h3>
+                  <div className="space-y-1 text-sm text-gray-600 mb-4">
+                    <p>📍 {project.location}</p>
+                    <p>📅 {project.year}</p>
+                    <p>👤 {project.client}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(project)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      <Edit size={16} />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(project._id || null)}
+                      className="flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="p-5">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{project.title}</h3>
-                <div className="space-y-1 text-sm text-gray-600 mb-4">
-                  <p>📍 {project.location}</p>
-                  <p>📅 {project.year}</p>
-                  <p>👤 {project.client}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(project)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    <Edit size={16} />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setDeleteConfirm(project.id)}
-                    className="flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Edit/Create Modal */}
         {isModalOpen && (
@@ -223,37 +311,28 @@ export default function AdminProjects() {
 
               {/* Tabs */}
               <div className="flex border-b bg-gray-50">
-                <button
-                  onClick={() => setActiveTab('basic')}
-                  className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-                    activeTab === 'basic'
-                      ? 'text-orange-500 border-b-2 border-orange-500 bg-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Basic Info
-                </button>
-                <button
-                  onClick={() => setActiveTab('details')}
-                  className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-                    activeTab === 'details'
-                      ? 'text-orange-500 border-b-2 border-orange-500 bg-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Project Details
-                </button>
-                <button
-                  onClick={() => setActiveTab('images')}
-                  className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-                    activeTab === 'images'
-                      ? 'text-orange-500 border-b-2 border-orange-500 bg-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Images
-                </button>
+                {['basic', 'details', 'images'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab as any)}
+                    className={`flex-1 px-6 py-3 font-semibold transition-colors capitalize ${
+                      activeTab === tab
+                        ? 'text-orange-500 border-b-2 border-orange-500 bg-white'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {tab === 'basic' ? 'Basic Info' : tab === 'details' ? 'Project Details' : 'Images'}
+                  </button>
+                ))}
               </div>
+
+              {/* Error in Modal */}
+              {error && (
+                <div className="m-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                  <AlertCircle size={20} />
+                  <span>{error}</span>
+                </div>
+              )}
 
               {/* Modal Content */}
               <div className="flex-1 overflow-y-auto p-6">
@@ -417,7 +496,11 @@ export default function AdminProjects() {
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                         {formData.gallery.map((img, index) => (
                           <div key={index} className="relative group">
-                            <img src={img} alt={`Gallery ${index + 1}`} className="w-full h-32 object-cover rounded-lg" />
+                            <img 
+                              src={typeof img === 'string' ? img : img.url} 
+                              alt={`Gallery ${index + 1}`} 
+                              className="w-full h-32 object-cover rounded-lg" 
+                            />
                             <button
                               onClick={() => removeGalleryImage(index)}
                               className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -447,15 +530,18 @@ export default function AdminProjects() {
               <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+                  disabled={saving}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors"
+                  disabled={saving}
+                  className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
-                  {editingProject ? 'Update Project' : 'Create Project'}
+                  {saving && <Loader2 className="animate-spin" size={16} />}
+                  {saving ? 'Saving...' : editingProject ? 'Update Project' : 'Create Project'}
                 </button>
               </div>
             </div>

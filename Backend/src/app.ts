@@ -11,6 +11,8 @@ import authRoutes from './routes/auth.routes';
 import homeRoutes from './routes/home.routes';
 import adminRoutes from './routes/admin.routes';
 import uploadRoutes from './routes/upload.routes';
+import projectRoutes from './routes/project.routes';
+import blogRoutes from './routes/blog.routes';
 
 const app: Application = express();
 
@@ -65,6 +67,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/home', homeRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/blogs', blogRoutes);
 
 // 404 Handler
 app.use('*', (req: Request, res: Response) => {

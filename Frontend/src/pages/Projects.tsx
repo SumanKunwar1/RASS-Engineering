@@ -1,20 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { MapPin, Calendar, ArrowRight } from 'lucide-react';
+import { MapPin, Calendar, ArrowRight, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { projectsData } from '../data/mockData';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+interface Project {
+  _id: string;
+  title: string;
+  category: string;
+  location: string;
+  year: string;
+  description: string;
+  image: string;
+}
 
 const Projects: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const categories: string[] = ['All', ...new Set(projectsData.map(p => p.category))];
+  const categories: string[] = ['All', 'Waterproofing', 'Structural Retrofitting', 'Epoxy Flooring', 'ACP Cladding', 'Metal Fabrication', 'Expansion Joint'];
+
+  const fetchProjects = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/projects`, {
+        params: selectedCategory !== 'All' ? { category: selectedCategory } : {}
+      });
+      setProjects(response.data.data || []);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to fetch projects');
+      console.error('Fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, [selectedCategory]);
 
   const filteredProjects = selectedCategory === 'All'
-    ? projectsData
-    : projectsData.filter(p => p.category === selectedCategory);
+    ? projects
+    : projects.filter(p => p.category === selectedCategory);
 
   return (
     <>
@@ -81,57 +116,74 @@ const Projects: React.FC = () => {
         {/* Projects Grid */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProjects.map((project, index) => (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Link to={`/projects/${project.id}`}>
-                    <Card className="h-full overflow-hidden border-0 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group">
-                      <div className="relative h-64 overflow-hidden">
-                        <img
-                          src={project.image}
-                          alt={project.title}
-                          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute top-4 right-4 bg-[#F46A1F] text-white px-3 py-1 rounded-full text-sm font-semibold">
-                          {project.category}
-                        </div>
-                      </div>
-
-                      <CardContent className="p-6">
-                        <h3 className="text-xl font-bold text-black mb-3 group-hover:text-[#F46A1F] transition-colors">
-                          {project.title}
-                        </h3>
-
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center text-gray-600 text-sm">
-                            <MapPin size={16} className="mr-2 text-[#F46A1F]" />
-                            {project.location}
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="animate-spin text-[#F46A1F]" size={48} />
+              </div>
+            ) : error ? (
+              <div className="text-center py-20">
+                <p className="text-red-600 text-lg">{error}</p>
+                <Button onClick={fetchProjects} className="mt-4 bg-[#F46A1F] hover:bg-[#d85a15]">
+                  Try Again
+                </Button>
+              </div>
+            ) : filteredProjects.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-gray-600 text-lg">No projects found in this category.</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredProjects.map((project, index) => (
+                  <motion.div
+                    key={project._id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <Link to={`/projects/${project._id}`}>
+                      <Card className="h-full overflow-hidden border-0 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group">
+                        <div className="relative h-64 overflow-hidden">
+                          <img
+                            src={project.image}
+                            alt={project.title}
+                            className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute top-4 right-4 bg-[#F46A1F] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            {project.category}
                           </div>
-                          <div className="flex items-center text-gray-600 text-sm">
-                            <Calendar size={16} className="mr-2 text-[#F46A1F]" />
-                            {project.year}
+                        </div>
+
+                        <CardContent className="p-6">
+                          <h3 className="text-xl font-bold text-black mb-3 group-hover:text-[#F46A1F] transition-colors">
+                            {project.title}
+                          </h3>
+
+                          <div className="space-y-2 mb-4">
+                            <div className="flex items-center text-gray-600 text-sm">
+                              <MapPin size={16} className="mr-2 text-[#F46A1F]" />
+                              {project.location}
+                            </div>
+                            <div className="flex items-center text-gray-600 text-sm">
+                              <Calendar size={16} className="mr-2 text-[#F46A1F]" />
+                              {project.year}
+                            </div>
                           </div>
-                        </div>
 
-                        <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-                          {project.description}
-                        </p>
+                          <p className="text-gray-600 text-sm line-clamp-2 mb-4">
+                            {project.description}
+                          </p>
 
-                        <div className="flex items-center text-[#F46A1F] font-semibold text-sm group-hover:gap-2 transition-all">
-                          View Details
-                          <ArrowRight size={16} className="ml-1" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+                          <div className="flex items-center text-[#F46A1F] font-semibold text-sm group-hover:gap-2 transition-all">
+                            View Details
+                            <ArrowRight size={16} className="ml-1" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
