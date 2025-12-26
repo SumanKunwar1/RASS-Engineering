@@ -5,8 +5,8 @@ import {
   uploadImageToCloudinary, 
   deleteImageFromCloudinary 
 } from '../utils/cloudinary.utils';
-import { validateBase64Image } from '../middleware/upload.middleware';
 import logger from '../utils/logger';
+import { validateBase64Image } from '../middleware/upload.middleware';
 
 // Helper function to calculate read time
 const calculateReadTime = (content: string): string => {

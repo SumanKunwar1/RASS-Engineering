@@ -14,19 +14,17 @@ import { protect } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
-// Public routes
-router.get('/', getAllBlogs);
+// Admin routes first (most specific)
+router.get('/admin/all', protect, getAdminBlogs);
+router.post('/', protect, createBlog);
+router.put('/:id', protect, updateBlog);
+router.delete('/:id', protect, deleteBlog);
+router.patch('/:id/toggle-published', protect, toggleBlogPublished);
+
+// Public routes (less specific)
 router.get('/category/:category', getBlogsByCategory);
-router.get('/:identifier', getBlogById); // Can be ID or slug
 router.get('/:id/related', getRelatedBlogs);
-
-// Admin routes (protected)
-router.use(protect);
-
-router.post('/', createBlog);
-router.get('/admin/all', getAdminBlogs);
-router.put('/:id', updateBlog);
-router.delete('/:id', deleteBlog);
-router.patch('/:id/toggle-published', toggleBlogPublished);
+router.get('/:identifier', getBlogById);
+router.get('/', getAllBlogs);
 
 export default router;

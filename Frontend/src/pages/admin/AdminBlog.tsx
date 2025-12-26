@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Upload, X, Trash2, Edit, Eye } from 'lucide-react';
+import { Plus, Upload, X, Trash2, Edit, AlertCircle, Loader2 } from 'lucide-react';
+import axios from 'axios';
 
-// Blog Post Interface
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 interface BlogPost {
-  id: number;
+  _id?: string;
   title: string;
   excerpt: string;
   content: string;
@@ -11,37 +13,42 @@ interface BlogPost {
   date: string;
   category: string;
   image: string;
+  imagePublicId?: string;
   readTime: string;
   published: boolean;
+  slug?: string;
+  views?: number;
+  tags?: string[];
 }
 
-// Initial mock blog posts
-const initialPosts: BlogPost[] = [
-  {
-    id: 1,
-    title: 'Essential Waterproofing Tips for Monsoon Season',
-    excerpt: 'Prepare your building for heavy rainfall with these expert waterproofing strategies.',
-    content: '<h2>Introduction to Waterproofing</h2><p>Monsoon season brings challenges...</p>',
-    author: 'RASS Engineering Team',
-    date: '2024-12-20',
-    category: 'Waterproofing',
-    image: 'https://images.unsplash.com/photo-1534237710431-e2fc698436d0?w=1200&q=80',
-    readTime: '5 min',
-    published: true
-  }
-];
+const getAuthToken = () => localStorage.getItem('rass_admin_token');
+
+const createAxiosInstance = () => {
+  const instance = axios.create({
+    baseURL: API_BASE_URL,
+    headers: { Authorization: `Bearer ${getAuthToken()}` }
+  });
+
+  instance.interceptors.request.use((config) => {
+    const token = getAuthToken();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
+
+  return instance;
+};
 
 export default function AdminBlog() {
-  const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'basic' | 'content' | 'preview'>('basic');
-  const [previewContent, setPreviewContent] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Form state
   const [formData, setFormData] = useState<BlogPost>({
-    id: 0,
     title: '',
     excerpt: '',
     content: '',
@@ -50,17 +57,41 @@ export default function AdminBlog() {
     category: '',
     image: '',
     readTime: '5 min',
-    published: false
+    published: false,
+    tags: []
   });
 
-  // Quill editor reference
   const editorRef = useRef<HTMLDivElement>(null);
   const quillInstanceRef = useRef<any>(null);
+
+  const categories = ['Waterproofing', 'Structural Engineering', 'Flooring Solutions', 'Construction Tips', 'Technology', 'Safety', 'Case Studies', 'Industry News'];
+
+  // Fetch all blogs
+  const fetchBlogs = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const axiosInstance = createAxiosInstance();
+      // Use admin endpoint to get ALL blogs (including unpublished)
+      const response = await axiosInstance.get('/blogs/admin/all');
+      console.log('Fetched blogs:', response.data);
+      setPosts(response.data.data || []);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || 'Failed to fetch blogs';
+      setError(errorMsg);
+      console.error('Fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBlogs();
+  }, []);
 
   // Initialize Quill editor
   useEffect(() => {
     if (isModalOpen && activeTab === 'content' && editorRef.current && !quillInstanceRef.current) {
-      // Load Quill dynamically
       const script = document.createElement('script');
       script.src = 'https://cdn.quilljs.com/1.3.6/quill.js';
       script.async = true;
@@ -71,7 +102,6 @@ export default function AdminBlog() {
       link.rel = 'stylesheet';
       document.head.appendChild(link);
 
-      // Add custom styles for image resizing
       const style = document.createElement('style');
       style.textContent = `
         .ql-editor img {
@@ -133,12 +163,10 @@ export default function AdminBlog() {
             scrollingContainer: editorRef.current.parentElement
           });
 
-          // Set initial content
           if (formData.content) {
             quillInstanceRef.current.root.innerHTML = formData.content;
           }
 
-          // Listen for changes - save cursor position
           quillInstanceRef.current.on('text-change', (delta: any, oldDelta: any, source: string) => {
             if (source === 'user') {
               const html = quillInstanceRef.current.root.innerHTML;
@@ -146,7 +174,6 @@ export default function AdminBlog() {
             }
           });
 
-          // Add image resize functionality
           setupImageResize();
         }
       };
@@ -159,7 +186,6 @@ export default function AdminBlog() {
     };
   }, [isModalOpen, activeTab]);
 
-  // Custom image handler for Quill
   const imageHandler = () => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
@@ -175,8 +201,6 @@ export default function AdminBlog() {
           const range = quillInstanceRef.current.getSelection(true);
           quillInstanceRef.current.insertEmbed(range.index, 'image', base64);
           quillInstanceRef.current.setSelection(range.index + 1);
-          
-          // Setup resize for newly inserted image
           setTimeout(() => setupImageResize(), 100);
         };
         reader.readAsDataURL(file);
@@ -184,7 +208,6 @@ export default function AdminBlog() {
     };
   };
 
-  // Setup image resize functionality
   const setupImageResize = () => {
     if (!quillInstanceRef.current) return;
 
@@ -192,10 +215,9 @@ export default function AdminBlog() {
     const images = editor.querySelectorAll('img');
     
     images.forEach((img: HTMLImageElement) => {
-      if (img.dataset.resizable) return; // Already setup
+      if (img.dataset.resizable) return;
       img.dataset.resizable = 'true';
       
-      // Make image fit container by default
       if (!img.style.width) {
         img.style.maxWidth = '100%';
         img.style.height = 'auto';
@@ -208,25 +230,20 @@ export default function AdminBlog() {
       let startWidth = 0;
       let startHeight = 0;
 
-      // Click to select image
       const selectImage = (e: MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         
-        // Remove existing handles
         document.querySelectorAll('.image-resize-handle').forEach(h => h.remove());
         document.querySelectorAll('.resizing').forEach(i => i.classList.remove('resizing'));
         
-        // Add selection styling
         img.classList.add('resizing');
         
-        // Create resize handle
         resizeHandle = document.createElement('div');
         resizeHandle.className = 'image-resize-handle';
         resizeHandle.style.position = 'absolute';
         resizeHandle.style.pointerEvents = 'auto';
         
-        // Position handle at bottom-right of image
         const updateHandlePosition = () => {
           if (!resizeHandle) return;
           const imgRect = img.getBoundingClientRect();
@@ -241,7 +258,6 @@ export default function AdminBlog() {
         editor.parentElement?.style.setProperty('position', 'relative');
         editor.parentElement?.appendChild(resizeHandle);
         
-        // Handle resize on mousedown
         const onHandleMouseDown = (e: MouseEvent) => {
           e.preventDefault();
           e.stopPropagation();
@@ -259,8 +275,6 @@ export default function AdminBlog() {
             
             const deltaX = e.clientX - startX;
             const deltaY = e.clientY - startY;
-            
-            // Use the larger delta for proportional resizing
             const delta = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
             
             const newWidth = Math.max(50, Math.min(startWidth + delta, editor.offsetWidth - 20));
@@ -282,7 +296,6 @@ export default function AdminBlog() {
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
             
-            // Save content after resize
             setTimeout(() => {
               if (quillInstanceRef.current) {
                 const html = quillInstanceRef.current.root.innerHTML;
@@ -301,7 +314,6 @@ export default function AdminBlog() {
       img.addEventListener('click', selectImage);
     });
 
-    // Click outside to deselect
     const deselectImages = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName !== 'IMG' && !target.classList.contains('image-resize-handle')) {
@@ -313,7 +325,6 @@ export default function AdminBlog() {
     editor.addEventListener('click', deselectImages);
   };
 
-  // Update Quill content when switching tabs or editing
   useEffect(() => {
     if (quillInstanceRef.current && formData.content && activeTab === 'content') {
       const currentContent = quillInstanceRef.current.root.innerHTML;
@@ -327,7 +338,7 @@ export default function AdminBlog() {
     }
   }, [activeTab]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -341,7 +352,6 @@ export default function AdminBlog() {
   const handleCreate = () => {
     setEditingPost(null);
     setFormData({
-      id: Date.now(),
       title: '',
       excerpt: '',
       content: '',
@@ -350,9 +360,11 @@ export default function AdminBlog() {
       category: '',
       image: '',
       readTime: '5 min',
-      published: false
+      published: false,
+      tags: []
     });
     setActiveTab('basic');
+    setError(null);
     setIsModalOpen(true);
   };
 
@@ -360,35 +372,74 @@ export default function AdminBlog() {
     setEditingPost(post);
     setFormData({ ...post });
     setActiveTab('basic');
+    setError(null);
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
-    if (editingPost) {
-      setPosts(prev => prev.map(p => p.id === formData.id ? formData : p));
-    } else {
-      setPosts(prev => [...prev, formData]);
+  const handleSave = async () => {
+    setError(null);
+
+    if (!formData.title || !formData.excerpt || !formData.content || !formData.category || !formData.image) {
+      setError('Please fill all required fields');
+      return;
     }
-    setIsModalOpen(false);
-    setEditingPost(null);
+
+    setSaving(true);
+
+    try {
+      const axiosInstance = createAxiosInstance();
+      
+      console.log('Saving blog:', {
+        title: formData.title,
+        hasContent: !!formData.content,
+        contentLength: formData.content?.length,
+        hasImage: !!formData.image
+      });
+
+      if (editingPost && editingPost._id) {
+        const response = await axiosInstance.put(`/blogs/${editingPost._id}`, formData);
+        console.log('Update response:', response.data);
+      } else {
+        const response = await axiosInstance.post('/blogs', formData);
+        console.log('Create response:', response.data);
+      }
+
+      await fetchBlogs();
+      setIsModalOpen(false);
+      setEditingPost(null);
+      
+      // Show success message
+      alert(editingPost ? 'Blog updated successfully!' : 'Blog created successfully!');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || 'Failed to save blog post';
+      setError(errorMsg);
+      console.error('Save error:', err);
+      console.error('Error response:', err.response?.data);
+      alert('Error: ' + errorMsg);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    setPosts(prev => prev.filter(p => p.id !== id));
-    setDeleteConfirm(null);
+  const handleDelete = async (id: string) => {
+    try {
+      const axiosInstance = createAxiosInstance();
+      await axiosInstance.delete(`/blogs/${id}`);
+      await fetchBlogs();
+      setDeleteConfirm(null);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete blog post');
+      console.error('Delete error:', err);
+    }
   };
 
   const handlePreview = () => {
-    setPreviewContent(formData.content);
     setActiveTab('preview');
   };
-
-  const categories = ['Waterproofing', 'Structural Engineering', 'Flooring Solutions', 'Construction Tips', 'Technology', 'Safety'];
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Blog Management</h1>
@@ -403,54 +454,68 @@ export default function AdminBlog() {
           </button>
         </div>
 
-        {/* Posts Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map(post => (
-            <div key={post.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-              <div className="relative h-48">
-                <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
-                <div className="absolute top-3 right-3 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                  {post.category}
-                </div>
-                {post.published && (
-                  <div className="absolute top-3 left-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                    Published
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+            <AlertCircle size={20} />
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="ml-auto">
+              <X size={20} />
+            </button>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="animate-spin text-orange-500" size={48} />
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {posts.map(post => (
+              <div key={post._id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                <div className="relative h-48">
+                  <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                  <div className="absolute top-3 right-3 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    {post.category}
                   </div>
-                )}
-              </div>
-              <div className="p-5">
-                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{post.title}</h3>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{post.excerpt}</p>
-                <div className="space-y-1 text-sm text-gray-500 mb-4">
-                  <p>📅 {new Date(post.date).toLocaleDateString()}</p>
-                  <p>✍️ {post.author}</p>
-                  <p>⏱️ {post.readTime}</p>
+                  {post.published && (
+                    <div className="absolute top-3 left-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      Published
+                    </div>
+                  )}
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(post)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    <Edit size={16} />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setDeleteConfirm(post.id)}
-                    className="flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                <div className="p-5">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{post.title}</h3>
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{post.excerpt}</p>
+                  <div className="space-y-1 text-sm text-gray-500 mb-4">
+                    <p>📅 {new Date(post.date).toLocaleDateString()}</p>
+                    <p>✍️ {post.author}</p>
+                    <p>⏱️ {post.readTime}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(post)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      <Edit size={16} />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(post._id || null)}
+                      className="flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Edit/Create Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col my-8">
-              {/* Modal Header */}
               <div className="flex justify-between items-center p-6 border-b">
                 <h2 className="text-2xl font-bold text-gray-900">
                   {editingPost ? 'Edit Blog Post' : 'Create New Blog Post'}
@@ -463,41 +528,29 @@ export default function AdminBlog() {
                 </button>
               </div>
 
-              {/* Tabs */}
               <div className="flex border-b bg-gray-50">
-                <button
-                  onClick={() => setActiveTab('basic')}
-                  className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-                    activeTab === 'basic'
-                      ? 'text-orange-500 border-b-2 border-orange-500 bg-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Basic Info
-                </button>
-                <button
-                  onClick={() => setActiveTab('content')}
-                  className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-                    activeTab === 'content'
-                      ? 'text-orange-500 border-b-2 border-orange-500 bg-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Content Editor
-                </button>
-                <button
-                  onClick={handlePreview}
-                  className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-                    activeTab === 'preview'
-                      ? 'text-orange-500 border-b-2 border-orange-500 bg-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Preview
-                </button>
+                {['basic', 'content', 'preview'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => tab === 'preview' ? handlePreview() : setActiveTab(tab as any)}
+                    className={`flex-1 px-6 py-3 font-semibold transition-colors capitalize ${
+                      activeTab === tab
+                        ? 'text-orange-500 border-b-2 border-orange-500 bg-white'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {tab === 'basic' ? 'Basic Info' : tab === 'content' ? 'Content Editor' : 'Preview'}
+                  </button>
+                ))}
               </div>
 
-              {/* Modal Content */}
+              {error && (
+                <div className="m-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                  <AlertCircle size={20} />
+                  <span>{error}</span>
+                </div>
+              )}
+
               <div className="flex-1 overflow-y-auto p-6">
                 {activeTab === 'basic' && (
                   <div className="space-y-5">
@@ -643,7 +696,6 @@ export default function AdminBlog() {
                 )}
               </div>
 
-              {/* Modal Footer */}
               <div className="flex justify-between items-center gap-3 p-6 border-t bg-gray-50">
                 <div className="text-sm text-gray-600">
                   {formData.content && (
@@ -653,15 +705,18 @@ export default function AdminBlog() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setIsModalOpen(false)}
-                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+                    disabled={saving}
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSave}
-                    className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors"
+                    disabled={saving}
+                    className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
                   >
-                    {editingPost ? 'Update Post' : 'Create Post'}
+                    {saving && <Loader2 className="animate-spin" size={16} />}
+                    {saving ? 'Saving...' : editingPost ? 'Update Post' : 'Create Post'}
                   </button>
                 </div>
               </div>
@@ -669,7 +724,6 @@ export default function AdminBlog() {
           </div>
         )}
 
-        {/* Delete Confirmation Modal */}
         {deleteConfirm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
@@ -699,7 +753,6 @@ export default function AdminBlog() {
   );
 }
 
-// Add to window object for Quill
 declare global {
   interface Window {
     Quill: any;

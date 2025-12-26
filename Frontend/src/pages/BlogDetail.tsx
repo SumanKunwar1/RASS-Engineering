@@ -1,30 +1,93 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, ArrowLeft, ArrowRight } from 'lucide-react';
-import { blogData } from '../data/blogData';
+import { Calendar, Clock, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+interface BlogPost {
+  _id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  date: string;
+  category: string;
+  image: string;
+  readTime: string;
+  slug?: string;
+  views?: number;
+}
 
 const BlogDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  const blogPost = blogData.find(post => post.id === Number(id));
+  
+  const [blogPost, setBlogPost] = useState<BlogPost | null>(null);
+  const [relatedBlogs, setRelatedBlogs] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    const fetchBlog = async () => {
+      if (!id) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        console.log('Fetching blog with ID:', id);
+        
+        // Fetch blog post - backend supports both ID and slug
+        const response = await axios.get(`${API_BASE_URL}/blogs/${id}`);
+        const blog = response.data.data;
+        
+        console.log('Blog fetched:', blog);
+        setBlogPost(blog);
+        
+        // Fetch related blogs
+        try {
+          const relatedResponse = await axios.get(`${API_BASE_URL}/blogs/${blog._id}/related`);
+          setRelatedBlogs(relatedResponse.data.data || []);
+        } catch (err) {
+          console.error('Failed to fetch related blogs:', err);
+          // Don't fail the whole page if related blogs fail
+        }
+      } catch (err: any) {
+        const errorMsg = err.response?.data?.message || 'Failed to fetch blog post';
+        setError(errorMsg);
+        console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlog();
   }, [id]);
 
-  if (!blogPost) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-white pt-20">
+        <Loader2 className="animate-spin text-[#F46A1F]" size={48} />
+      </div>
+    );
+  }
+
+  if (error || !blogPost) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white pt-20">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-black mb-4">Blog Post Not Found</h1>
-          <p className="text-gray-600 mb-8">Sorry, the blog post you're looking for doesn't exist.</p>
+          <p className="text-gray-600 mb-8">{error || "Sorry, the blog post you're looking for doesn't exist."}</p>
           <button 
             onClick={() => navigate('/blog')}
             className="inline-flex items-center px-6 py-3 bg-[#F46A1F] hover:bg-[#d85a15] text-white font-semibold rounded-lg transition-colors"
           >
+            <ArrowLeft size={20} className="mr-2" />
             Back to Blog
           </button>
         </div>
@@ -32,306 +95,13 @@ const BlogDetail: React.FC = () => {
     );
   }
 
-  // Find adjacent posts for navigation
-  const currentIndex = blogData.findIndex(post => post.id === Number(id));
-  const prevPost = currentIndex > 0 ? blogData[currentIndex - 1] : null;
-  const nextPost = currentIndex < blogData.length - 1 ? blogData[currentIndex + 1] : null;
-
-  // Enhanced function to parse content with image and media support
-  const parseContent = (content: string) => {
-    const blocks = content.split('\n\n').filter(block => block.trim());
-    
-    return blocks.map((block, index) => {
-      const trimmedBlock = block.trim();
-      
-      // Check for image syntax: [image:url:alignment:caption]
-      // alignment can be: left, center, right, full
-      const imageMatch = trimmedBlock.match(/^\[image:([^\]]+):([^\]]+):([^\]]*)\]$/);
-      if (imageMatch) {
-        const [, url, alignment, caption] = imageMatch;
-        
-        const alignmentClasses = {
-          left: 'float-left mr-6 mb-6 w-full md:w-1/2',
-          right: 'float-right ml-6 mb-6 w-full md:w-1/2',
-          center: 'mx-auto my-8 w-full md:w-3/4',
-          full: 'w-full my-8'
-        };
-        
-        const containerClass = alignmentClasses[alignment as keyof typeof alignmentClasses] || alignmentClasses.center;
-        
-        return (
-          <div key={index} className={containerClass}>
-            <img
-              src={url.trim()}
-              alt={caption || 'Blog image'}
-              className="w-full rounded-lg shadow-lg"
-            />
-            {caption && (
-              <p className="text-sm text-gray-600 italic mt-2 text-center">
-                {caption}
-              </p>
-            )}
-          </div>
-        );
-      }
-      
-      // Check for image gallery: [gallery:url1,url2,url3:caption]
-      const galleryMatch = trimmedBlock.match(/^\[gallery:([^\]]+):([^\]]*)\]$/);
-      if (galleryMatch) {
-        const [, urls, caption] = galleryMatch;
-        const imageUrls = urls.split(',').map(url => url.trim());
-        
-        const gridClass = imageUrls.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3';
-        
-        return (
-          <div key={index} className="my-8">
-            <div className={`grid ${gridClass} gap-4`}>
-              {imageUrls.map((url, imgIndex) => (
-                <img
-                  key={imgIndex}
-                  src={url}
-                  alt={`Gallery image ${imgIndex + 1}`}
-                  className="w-full h-64 object-cover rounded-lg shadow-md hover:shadow-xl transition-shadow"
-                />
-              ))}
-            </div>
-            {caption && (
-              <p className="text-sm text-gray-600 italic mt-3 text-center">
-                {caption}
-              </p>
-            )}
-          </div>
-        );
-      }
-      
-      // Check for quote block: [quote:text:author]
-      const quoteMatch = trimmedBlock.match(/^\[quote:([^\]]+):([^\]]*)\]$/);
-      if (quoteMatch) {
-        const [, text, author] = quoteMatch;
-        return (
-          <blockquote key={index} className="my-8 pl-6 border-l-4 border-[#F46A1F] bg-gray-50 p-6 rounded-r-lg">
-            <p className="text-xl text-gray-800 italic leading-relaxed mb-2">
-              "{text.trim()}"
-            </p>
-            {author && (
-              <footer className="text-gray-600 font-semibold">
-                — {author.trim()}
-              </footer>
-            )}
-          </blockquote>
-        );
-      }
-      
-      // Check for callout/info box: [callout:title:content]
-      const calloutMatch = trimmedBlock.match(/^\[callout:([^\]]+):([^\]]+)\]$/);
-      if (calloutMatch) {
-        const [, title, content] = calloutMatch;
-        return (
-          <div key={index} className="my-8 p-6 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
-            <h4 className="text-lg font-bold text-blue-900 mb-2">{title.trim()}</h4>
-            <p className="text-gray-700 leading-7">{content.trim()}</p>
-          </div>
-        );
-      }
-
-      // Check for video embed: [video:url:caption]
-      const videoMatch = trimmedBlock.match(/^\[video:([^\]]+):([^\]]*)\]$/);
-      if (videoMatch) {
-        const [, url, caption] = videoMatch;
-        const videoId = url.includes('youtube.com') || url.includes('youtu.be') 
-          ? url.split(/v=|\//).pop()?.split('&')[0]
-          : null;
-        
-        if (videoId) {
-          return (
-            <div key={index} className="my-8">
-              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                <iframe
-                  className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
-                  src={`https://www.youtube.com/embed/${videoId}`}
-                  title="Video player"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-              {caption && (
-                <p className="text-sm text-gray-600 italic mt-3 text-center">
-                  {caption}
-                </p>
-              )}
-            </div>
-          );
-        }
-      }
-      
-      // Regular content parsing
-      const lines = block.split('\n').map(line => line.trim()).filter(line => line);
-      
-      // Single line processing
-      if (lines.length === 1) {
-        const line = lines[0];
-        
-        // Check for headers
-        if (line.startsWith('# ')) {
-          return (
-            <h2 key={index} className="text-3xl font-bold text-black mt-12 mb-6">
-              {line.substring(2)}
-            </h2>
-          );
-        }
-        if (line.startsWith('## ')) {
-          return (
-            <h3 key={index} className="text-2xl font-bold text-black mt-10 mb-5">
-              {line.substring(3)}
-            </h3>
-          );
-        }
-        if (line.startsWith('### ')) {
-          return (
-            <h4 key={index} className="text-xl font-bold text-black mt-8 mb-4">
-              {line.substring(4)}
-            </h4>
-          );
-        }
-        
-        // Check if it's a natural header (ends with colon)
-        const isHeader = (line.endsWith(':') || line.endsWith('?')) && 
-                        line.length < 100 && 
-                        !line.endsWith('.');
-        
-        if (isHeader) {
-          return (
-            <h3 key={index} className="text-xl font-bold text-black mt-8 mb-4">
-              {line}
-            </h3>
-          );
-        }
-        
-        // Regular paragraph
-        return (
-          <p key={index} className="text-gray-700 leading-8 mb-6">
-            {line}
-          </p>
-        );
-      }
-      
-      // Multiple lines - check for lists
-      const isNumberedList = lines.every(line => /^\d+[\.)]\s/.test(line));
-      
-      if (isNumberedList) {
-        return (
-          <ol key={index} className="space-y-3 list-decimal list-outside ml-6 text-gray-700 mb-6">
-            {lines.map((line, lineIndex) => {
-              const cleanedLine = line.replace(/^\d+[\.)]\s*/, '');
-              return (
-                <li key={lineIndex} className="pl-2 leading-7">
-                  {cleanedLine}
-                </li>
-              );
-            })}
-          </ol>
-        );
-      }
-      
-      const isBulletedList = lines.every(line => /^[-*•]\s/.test(line));
-      
-      if (isBulletedList) {
-        return (
-          <ul key={index} className="space-y-3 list-disc list-outside ml-6 text-gray-700 mb-6">
-            {lines.map((line, lineIndex) => {
-              const cleanedLine = line.replace(/^[-*•]\s*/, '');
-              return (
-                <li key={lineIndex} className="pl-2 leading-7">
-                  {cleanedLine}
-                </li>
-              );
-            })}
-          </ul>
-        );
-      }
-      
-      // Check if first line is a header
-      const firstLineIsHeader = lines[0].endsWith(':') && lines[0].length < 100;
-      
-      if (firstLineIsHeader && lines.length > 1) {
-        const remainingLines = lines.slice(1);
-        const remainingIsBulletList = remainingLines.every(line => /^[-*•]\s/.test(line));
-        const remainingIsNumberedList = remainingLines.every(line => /^\d+[\.)]\s/.test(line));
-        
-        if (remainingIsBulletList) {
-          return (
-            <div key={index} className="mb-6">
-              <h3 className="text-xl font-bold text-black mt-8 mb-4">
-                {lines[0]}
-              </h3>
-              <ul className="space-y-3 list-disc list-outside ml-6 text-gray-700">
-                {remainingLines.map((line, lineIndex) => {
-                  const cleanedLine = line.replace(/^[-*•]\s*/, '');
-                  return (
-                    <li key={lineIndex} className="pl-2 leading-7">
-                      {cleanedLine}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          );
-        }
-        
-        if (remainingIsNumberedList) {
-          return (
-            <div key={index} className="mb-6">
-              <h3 className="text-xl font-bold text-black mt-8 mb-4">
-                {lines[0]}
-              </h3>
-              <ol className="space-y-3 list-decimal list-outside ml-6 text-gray-700">
-                {remainingLines.map((line, lineIndex) => {
-                  const cleanedLine = line.replace(/^\d+[\.)]\s*/, '');
-                  return (
-                    <li key={lineIndex} className="pl-2 leading-7">
-                      {cleanedLine}
-                    </li>
-                  );
-                })}
-              </ol>
-            </div>
-          );
-        }
-        
-        return (
-          <div key={index} className="mb-6">
-            <h3 className="text-xl font-bold text-black mt-8 mb-4">
-              {lines[0]}
-            </h3>
-            {remainingLines.map((line, lineIndex) => (
-              <p key={lineIndex} className="text-gray-700 leading-8 mb-3">
-                {line}
-              </p>
-            ))}
-          </div>
-        );
-      }
-      
-      // Multiple paragraphs
-      return (
-        <div key={index} className="mb-6">
-          {lines.map((line, lineIndex) => (
-            <p key={lineIndex} className="text-gray-700 leading-8 mb-3">
-              {line}
-            </p>
-          ))}
-        </div>
-      );
-    });
-  };
-
   return (
     <>
       <Helmet>
         <title>{blogPost.title} | RASS Engineering & Construction Blog</title>
         <meta name="description" content={blogPost.excerpt} />
         <meta name="author" content={blogPost.author} />
-        <link rel="canonical" href={`/blog/${blogPost.id}`} />
+        <link rel="canonical" href={`/blog/${blogPost.slug || blogPost._id}`} />
       </Helmet>
 
       <div className="min-h-screen bg-white">
@@ -387,6 +157,9 @@ const BlogDetail: React.FC = () => {
                     <span>{blogPost.readTime}</span>
                   </div>
                   <div>By {blogPost.author}</div>
+                  {blogPost.views && blogPost.views > 0 && (
+                    <div>{blogPost.views} views</div>
+                  )}
                 </div>
               </motion.div>
             </div>
@@ -400,11 +173,12 @@ const BlogDetail: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="prose-lg max-w-none"
+              className="prose prose-lg max-w-none"
             >
-              <div className="text-gray-700">
-                {parseContent(blogPost.content)}
-              </div>
+              <div 
+                className="text-gray-700 prose prose-headings:text-black prose-h2:text-3xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-6 prose-h3:text-2xl prose-h3:font-bold prose-h3:mt-10 prose-h3:mb-5 prose-h4:text-xl prose-h4:font-bold prose-h4:mt-8 prose-h4:mb-4 prose-p:leading-8 prose-p:mb-6 prose-ul:space-y-3 prose-ul:list-disc prose-ul:list-outside prose-ul:ml-6 prose-ol:space-y-3 prose-ol:list-decimal prose-ol:list-outside prose-ol:ml-6 prose-li:pl-2 prose-li:leading-7 prose-a:text-[#F46A1F] prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg prose-img:shadow-lg prose-blockquote:border-l-4 prose-blockquote:border-[#F46A1F] prose-blockquote:pl-6 prose-blockquote:italic"
+                dangerouslySetInnerHTML={{ __html: blogPost.content }} 
+              />
             </motion.article>
 
             {/* CTA Section within blog */}
@@ -423,66 +197,17 @@ const BlogDetail: React.FC = () => {
           </div>
         </section>
 
-        {/* Previous/Next Navigation */}
-        <section className="py-12 bg-gray-50 border-t">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 gap-8">
-              {prevPost ? (
-                <motion.button
-                  onClick={() => navigate(`/blog/${prevPost.id}`)}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  whileHover={{ x: -10 }}
-                  className="group text-left hover:bg-white p-4 rounded-lg transition-all"
-                >
-                  <div className="flex items-center text-[#F46A1F] font-semibold mb-2">
-                    <ArrowLeft size={18} className="mr-2" />
-                    Previous Article
-                  </div>
-                  <h4 className="text-lg font-bold text-black group-hover:text-[#F46A1F] transition-colors line-clamp-2">
-                    {prevPost.title}
-                  </h4>
-                </motion.button>
-              ) : (
-                <div />
-              )}
-
-              {nextPost ? (
-                <motion.button
-                  onClick={() => navigate(`/blog/${nextPost.id}`)}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  whileHover={{ x: 10 }}
-                  className="group text-right hover:bg-white p-4 rounded-lg transition-all"
-                >
-                  <div className="flex items-center justify-end text-[#F46A1F] font-semibold mb-2">
-                    Next Article
-                    <ArrowRight size={18} className="ml-2" />
-                  </div>
-                  <h4 className="text-lg font-bold text-black group-hover:text-[#F46A1F] transition-colors line-clamp-2">
-                    {nextPost.title}
-                  </h4>
-                </motion.button>
-              ) : (
-                <div />
-              )}
-            </div>
-          </div>
-        </section>
-
         {/* Related Articles */}
-        <section className="py-16 bg-white">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-black mb-12">More from {blogPost.category}</h2>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              {blogData
-                .filter(post => post.category === blogPost.category && post.id !== blogPost.id)
-                .slice(0, 3)
-                .map((post, index) => (
+        {relatedBlogs.length > 0 && (
+          <section className="py-16 bg-gray-50">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-3xl font-bold text-black mb-12">More from {blogPost.category}</h2>
+              
+              <div className="grid md:grid-cols-3 gap-8">
+                {relatedBlogs.map((post, index) => (
                   <motion.button
-                    key={post.id}
-                    onClick={() => navigate(`/blog/${post.id}`)}
+                    key={post._id}
+                    onClick={() => navigate(`/blog/${post.slug || post._id}`)}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -503,9 +228,10 @@ const BlogDetail: React.FC = () => {
                     </p>
                   </motion.button>
                 ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </div>
     </>
   );
