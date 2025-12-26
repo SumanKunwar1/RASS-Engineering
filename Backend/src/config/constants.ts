@@ -4,7 +4,7 @@ dotenv.config();
 
 // Server Configuration
 export const NODE_ENV = process.env.NODE_ENV || 'development';
-export const PORT = process.env.PORT || 6000;
+export const PORT = process.env.PORT || 5000;
 export const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
 export const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:8080';
 

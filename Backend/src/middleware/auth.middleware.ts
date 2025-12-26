@@ -32,8 +32,19 @@ export const protect = asyncHandler(async (req: Request, res: Response, next: Ne
       throw new Error('JWT_SECRET is not defined');
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, secret as Secret) as JwtPayload & { id: string };
+    // Verify token with explicit error handling
+    let decoded: JwtPayload & { id: string };
+    try {
+      decoded = jwt.verify(token, secret as Secret) as JwtPayload & { id: string };
+    } catch (jwtError: any) {
+      if (jwtError.name === 'TokenExpiredError') {
+        return next(new AppError('Your token has expired. Please log in again', 401));
+      }
+      if (jwtError.name === 'JsonWebTokenError') {
+        return next(new AppError('Invalid token. Please log in again', 401));
+      }
+      throw jwtError;
+    }
 
     // Check if user still exists
     const admin = await Admin.findById(decoded.id).select('-password');
@@ -42,10 +53,14 @@ export const protect = asyncHandler(async (req: Request, res: Response, next: Ne
       return next(new AppError('User no longer exists', 401));
     }
 
+    // Check if token was issued before password change (if you add passwordChangedAt field)
+    // For future enhancement
+
     // Grant access to protected route
     req.user = admin;
     next();
-  } catch (error) {
+  } catch (error: any) {
+    // Catch-all for other errors
     return next(new AppError('Not authorized to access this route', 401));
   }
 });
@@ -53,6 +68,10 @@ export const protect = asyncHandler(async (req: Request, res: Response, next: Ne
 // Optional: Check if user is admin (for future use)
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return next(new AppError('User not authenticated', 401));
+    }
+    
     if (!roles.includes(req.user.role)) {
       return next(
         new AppError(`User role ${req.user.role} is not authorized to access this route`, 403)

@@ -1,4 +1,4 @@
-import { AdminState, AboutContent, CompanyValue, TeamMember, StatItem } from './admin';
+import { AdminState, AboutContent, CompanyValue, TeamMember, StatItem, AdminAction } from './admin';
 
 // Default Company Values
 const defaultValues: CompanyValue[] = [
@@ -77,9 +77,8 @@ Our commitment to quality, innovation, and client satisfaction has made us the p
 export const initialAdminState: AdminState = {
   hero: {
     title: 'Engineering Excellence Since 2050 B.S.',
+    titleHighlight: 'Engineering Excellence', // ✅ Added required field
     subtitle: 'Premier specialized construction solutions across Nepal',
-    ctaText: 'Get a Quote',
-    ctaLink: '/contact',
     images: [],
   },
   
@@ -110,29 +109,32 @@ export const initialAdminState: AdminState = {
   contactSubmissions: [],
 };
 
-// Admin Reducer
-export function adminReducer(state: AdminState, action: any): AdminState {
+// ==================== PROPERLY TYPED REDUCER ====================
+// ✅ FIXED: Changed from 'action: any' to 'action: AdminAction'
+export function adminReducer(state: AdminState, action: AdminAction): AdminState {
+  const payload = action.payload as any; // ✅ Cast once here if needed
+  
   switch (action.type) {
     case 'SET_HERO':
-      return { ...state, hero: action.payload };
+      return { ...state, hero: { ...state.hero, ...payload } };
       
     case 'SET_ABOUT_CONTENT':
-      return { ...state, aboutContent: action.payload };
+      return { ...state, aboutContent: { ...state.aboutContent, ...payload } };
       
     case 'SET_ABOUT':
-      return { ...state, about: action.payload };
+      return { ...state, about: payload };
       
     case 'SET_SERVICES':
-      return { ...state, services: action.payload };
+      return { ...state, services: payload };
       
     case 'ADD_SERVICE':
-      return { ...state, services: [...state.services, action.payload] };
+      return { ...state, services: [...state.services, payload] };
       
     case 'UPDATE_SERVICE':
       return {
         ...state,
         services: state.services.map((service) =>
-          service.id === action.payload.id ? action.payload : service
+          service.id === payload.id ? payload : service
         ),
       };
       
@@ -143,16 +145,16 @@ export function adminReducer(state: AdminState, action: any): AdminState {
       };
       
     case 'SET_PROJECTS':
-      return { ...state, projects: action.payload };
+      return { ...state, projects: payload };
       
     case 'ADD_PROJECT':
-      return { ...state, projects: [...state.projects, action.payload] };
+      return { ...state, projects: [...state.projects, payload] };
       
     case 'UPDATE_PROJECT':
       return {
         ...state,
         projects: state.projects.map((project) =>
-          project.id === action.payload.id ? action.payload : project
+          project.id === payload.id ? payload : project
         ),
       };
       
@@ -163,16 +165,16 @@ export function adminReducer(state: AdminState, action: any): AdminState {
       };
       
     case 'SET_BLOG':
-      return { ...state, blog: action.payload };
+      return { ...state, blog: payload };
       
     case 'ADD_BLOG':
-      return { ...state, blog: [...state.blog, action.payload] };
+      return { ...state, blog: [...state.blog, payload] };
       
     case 'UPDATE_BLOG':
       return {
         ...state,
         blog: state.blog.map((post) =>
-          post.id === action.payload.id ? action.payload : post
+          post.id === payload.id ? payload : post
         ),
       };
       
@@ -183,17 +185,17 @@ export function adminReducer(state: AdminState, action: any): AdminState {
       };
       
     case 'SET_CONTACT':
-      return { ...state, contact: action.payload };
+      return { ...state, contact: { ...state.contact, ...payload } };
       
     case 'SET_SETTINGS':
-      return { ...state, settings: action.payload };
+      return { ...state, settings: { ...state.settings, ...payload } };
       
     case 'UPDATE_QUOTE_STATUS':
       return {
         ...state,
         quoteSubmissions: state.quoteSubmissions.map((submission) =>
-          submission.id === action.payload.id
-            ? { ...submission, status: action.payload.status }
+          submission.id === payload.id
+            ? { ...submission, status: payload.status }
             : submission
         ),
       };
@@ -202,14 +204,14 @@ export function adminReducer(state: AdminState, action: any): AdminState {
       return {
         ...state,
         contactSubmissions: state.contactSubmissions.map((submission) =>
-          submission.id === action.payload.id
-            ? { ...submission, status: action.payload.status }
+          submission.id === payload.id
+            ? { ...submission, status: payload.status }
             : submission
         ),
       };
       
     case 'LOAD_STATE':
-      return action.payload;
+      return payload;
       
     default:
       return state;

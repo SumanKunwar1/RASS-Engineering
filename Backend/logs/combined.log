@@ -15,3 +15,195 @@
 {"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-25 15:34:51"}
 {"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 15:34:51"}
 {"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 15:34:51"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 16:09:27"}
+{"level":"info","message":"🚀 Server running on port 6000 in development mode","timestamp":"2025-12-25 16:09:27"}
+{"level":"info","message":"📍 Server URL: http://localhost:6000","timestamp":"2025-12-25 16:09:27"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 16:09:27"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-25 16:09:28"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 16:09:28"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 16:09:29"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 16:20:32"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-25 16:20:32"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-25 16:20:32"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 16:20:32"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-02.rttgmtn.mongodb.net","timestamp":"2025-12-25 16:20:37"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 16:20:37"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 16:20:38"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 16:20:45"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-25 16:20:45"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-25 16:20:45"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 16:20:45"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-25 16:20:47"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 16:20:47"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 16:20:49"}
+{"level":"info","message":"Admin logged in: admin@rass.com","timestamp":"2025-12-25 16:21:02"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-25 16:21:02","url":"/api/admin/home"}
+{"level":"info","message":"Admin logged in: admin@rass.com","timestamp":"2025-12-25 16:27:47"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-25 16:27:47","url":"/api/admin/home"}
+{"level":"error","message":"(0 , cloudinary_utils_1.uploadMultipleImages) is not a function","method":"POST","stack":"TypeError: (0 , cloudinary_utils_1.uploadMultipleImages) is not a function\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:184:45\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\errorHandler.ts:79:21\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Route.dispatch (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:119:3)\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:284:15\n    at Function.process_params (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:346:12)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\auth.middleware.ts:47:5","timestamp":"2025-12-25 16:30:27","url":"/api/upload/hero-images"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-25 16:31:24","url":"/api/admin/home"}
+{"level":"error","message":"(0 , cloudinary_utils_1.uploadMultipleImages) is not a function","method":"POST","stack":"TypeError: (0 , cloudinary_utils_1.uploadMultipleImages) is not a function\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:184:45\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\errorHandler.ts:79:21\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Route.dispatch (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:119:3)\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:284:15\n    at Function.process_params (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:346:12)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\auth.middleware.ts:47:5","timestamp":"2025-12-25 16:31:34","url":"/api/upload/hero-images"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-25 16:36:14","url":"/api/admin/home"}
+{"level":"error","message":"(0 , cloudinary_utils_1.uploadMultipleImages) is not a function","method":"POST","stack":"TypeError: (0 , cloudinary_utils_1.uploadMultipleImages) is not a function\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:184:45\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\errorHandler.ts:79:21\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Route.dispatch (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:119:3)\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:284:15\n    at Function.process_params (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:346:12)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\auth.middleware.ts:47:5","timestamp":"2025-12-25 16:36:31","url":"/api/upload/hero-images"}
+{"level":"error","message":"(0 , cloudinary_utils_1.uploadImageToCloudinary) is not a function","method":"POST","stack":"TypeError: (0 , cloudinary_utils_1.uploadImageToCloudinary) is not a function\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:213:47\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\errorHandler.ts:79:21\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Route.dispatch (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:119:3)\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:284:15\n    at Function.process_params (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:346:12)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\auth.middleware.ts:47:5","timestamp":"2025-12-25 16:37:16","url":"/api/upload/about-image"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 16:45:46"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-25 16:45:46"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-25 16:45:46"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 16:45:46"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-25 16:45:47"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 16:45:47"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 16:45:47"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 16:46:09"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-25 16:46:09"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-25 16:46:09"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 16:46:09"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-02.rttgmtn.mongodb.net","timestamp":"2025-12-25 16:46:11"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 16:46:11"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 16:46:11"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 16:46:28"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-25 16:46:28"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-25 16:46:28"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 16:46:28"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-25 16:46:29"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 16:46:29"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 16:46:30"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 16:47:51"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-25 16:47:51"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-25 16:47:51"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 16:47:51"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-25 16:47:52"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 16:47:52"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 16:47:53"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 16:48:02"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-25 16:48:02"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-25 16:48:02"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 16:48:02"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-25 16:48:04"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 16:48:04"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 16:48:04"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 16:50:08"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-25 16:50:08"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-25 16:50:08"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 16:50:08"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-25 16:50:10"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 16:50:10"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 16:50:11"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-25 16:53:10"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-25 16:53:10"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-25 16:53:10"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-25 16:53:10"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-01.rttgmtn.mongodb.net","timestamp":"2025-12-25 16:53:11"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-25 16:53:11"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-25 16:53:12"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-25 17:06:30","url":"/api/admin/home"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-25 17:06:49","url":"/api/admin/home"}
+{"level":"error","message":"Hero upload error: (0 , cloudinary_utils_1.uploadMultipleImages) is not a function","timestamp":"2025-12-25 17:07:30"}
+{"level":"error","message":"(0 , cloudinary_utils_1.uploadMultipleImages) is not a function","method":"POST","stack":"Error: (0 , cloudinary_utils_1.uploadMultipleImages) is not a function\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:241:17\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\errorHandler.ts:79:21\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at convertToBase64 (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\upload.middleware.ts:49:5)\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:91:12)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at done (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\multer\\lib\\make-middleware.js:47:7)","timestamp":"2025-12-25 17:07:30","url":"/api/upload/hero-images"}
+{"level":"error","message":"Hero upload error: (0 , cloudinary_utils_1.uploadMultipleImages) is not a function","timestamp":"2025-12-25 17:08:08"}
+{"level":"error","message":"(0 , cloudinary_utils_1.uploadMultipleImages) is not a function","method":"POST","stack":"Error: (0 , cloudinary_utils_1.uploadMultipleImages) is not a function\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:241:17\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\errorHandler.ts:79:21\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at convertToBase64 (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\middleware\\upload.middleware.ts:49:5)\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Layer.handle [as handle_request] (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\layer.js:91:12)\n    at next (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at done (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\node_modules\\multer\\lib\\make-middleware.js:47:7)","timestamp":"2025-12-25 17:08:08","url":"/api/upload/hero-images"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 11:43:30"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 11:43:30"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 11:43:30"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 11:43:30"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-02.rttgmtn.mongodb.net","timestamp":"2025-12-26 11:43:31"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 11:43:31"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 11:43:31"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 11:44:06"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 11:44:07"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 11:44:07"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 11:44:07"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-02.rttgmtn.mongodb.net","timestamp":"2025-12-26 11:44:08"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 11:44:08"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 11:44:08"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 11:55:39"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 11:55:40"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 11:55:40"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 11:55:40"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2025-12-26 11:55:42"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 11:55:42"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 11:55:43"}
+{"level":"info","message":"Admin logged in: admin@rass.com","timestamp":"2025-12-26 12:43:44"}
+{"level":"info","message":"Admin logged in: admin@rass.com","timestamp":"2025-12-26 12:43:59"}
+{"level":"info","message":"Admin logged in: admin@rass.com","timestamp":"2025-12-26 12:45:00"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 12:50:58","url":"/api/admin/home"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 12:50:59","url":"/api/admin/home"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 12:51:04","url":"/api/admin/home"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 12:51:05","url":"/api/admin/home"}
+{"level":"info","message":"Admin logged in: admin@rass.com","timestamp":"2025-12-26 12:51:30"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 12:51:37","url":"/api/admin/home"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 12:51:38","url":"/api/admin/home"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 12:52:58","url":"/api/admin/home"}
+{"level":"info","message":"Admin logged in: admin@rass.com","timestamp":"2025-12-26 13:01:30"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 13:01:30","url":"/api/admin/home"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 13:01:30","url":"/api/admin/home"}
+{"level":"error","message":"Homepage content not found","method":"GET","stack":"Error: Homepage content not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\admin.controller.ts:194:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 13:03:42","url":"/api/admin/home"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 13:18:41"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 13:18:41"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 13:18:41"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 13:18:41"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-01.rttgmtn.mongodb.net","timestamp":"2025-12-26 13:18:42"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 13:18:42"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 13:18:42"}
+{"level":"info","message":"Default homepage content created","timestamp":"2025-12-26 13:18:48"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/hero-images/wyqiaa1ljrcfixmewtis","timestamp":"2025-12-26 13:19:55"}
+{"level":"info","message":"1 images uploaded to Cloudinary","timestamp":"2025-12-26 13:19:55"}
+{"level":"info","message":"1 hero images uploaded by admin: admin@rass.com","timestamp":"2025-12-26 13:19:55"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 13:21:32"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 13:21:32"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 13:21:32"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 13:21:32"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-01.rttgmtn.mongodb.net","timestamp":"2025-12-26 13:21:33"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 13:21:33"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 13:21:33"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 13:22:55"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 13:22:55"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 13:22:55"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 13:22:55"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-01.rttgmtn.mongodb.net","timestamp":"2025-12-26 13:22:56"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 13:22:56"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 13:22:57"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 13:26:26"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 13:26:26"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 13:26:26"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 13:26:26"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-02.rttgmtn.mongodb.net","timestamp":"2025-12-26 13:26:27"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 13:26:27"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 13:26:27"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 13:27:01"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 13:27:01"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 13:27:01"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 13:27:01"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-02.rttgmtn.mongodb.net","timestamp":"2025-12-26 13:27:04"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 13:27:04"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 13:27:05"}
+{"level":"info","message":"Hero section updated by admin: admin@rass.com","timestamp":"2025-12-26 13:28:51"}
+{"level":"info","message":"Hero section updated by admin: admin@rass.com","timestamp":"2025-12-26 13:29:40"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/hero-images/ztqm9s3rhb5q19ealz3m","timestamp":"2025-12-26 13:30:06"}
+{"level":"info","message":"1 images uploaded to Cloudinary","timestamp":"2025-12-26 13:30:06"}
+{"level":"info","message":"1 hero images uploaded by admin: admin@rass.com","timestamp":"2025-12-26 13:30:06"}
+{"level":"info","message":"Services updated by admin: admin@rass.com","timestamp":"2025-12-26 13:31:01"}
+{"level":"info","message":"Services updated by admin: admin@rass.com","timestamp":"2025-12-26 13:31:09"}
+{"level":"info","message":"Contact CTA updated by admin: admin@rass.com","timestamp":"2025-12-26 13:31:27"}
+{"level":"info","message":"Contact CTA updated by admin: admin@rass.com","timestamp":"2025-12-26 13:31:34"}
+{"level":"info","message":"About section updated by admin: admin@rass.com","timestamp":"2025-12-26 13:32:05"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2025-12-26 13:52:44"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2025-12-26 13:52:45"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2025-12-26 13:52:45"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2025-12-26 13:52:45"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-01.rttgmtn.mongodb.net","timestamp":"2025-12-26 13:52:46"}
+{"level":"info","message":"📦 Database: test","timestamp":"2025-12-26 13:52:46"}
+{"level":"info","message":"Admin user already exists","timestamp":"2025-12-26 13:52:46"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/hero-images/dbam4gpddwww7w6vjwpp","timestamp":"2025-12-26 13:53:26"}
+{"level":"info","message":"1 images uploaded to Cloudinary","timestamp":"2025-12-26 13:53:26"}
+{"level":"info","message":"1 hero images uploaded by admin: admin@rass.com","timestamp":"2025-12-26 13:53:26"}
+{"level":"error","message":"Cloudinary delete error: Failed to delete image: not found","stack":"Error: Failed to delete image: not found\n    at deleteImageFromCloudinary (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\utils\\cloudinary.utils.ts:92:13)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:116:5","timestamp":"2025-12-26 13:53:41"}
+{"level":"error","message":"Delete error: Failed to delete image: Failed to delete image: not found","timestamp":"2025-12-26 13:53:41"}
+{"level":"error","message":"Failed to delete image: Failed to delete image: not found","method":"DELETE","stack":"Error: Failed to delete image: Failed to delete image: not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:126:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 13:53:41","url":"/api/upload/image"}
+{"level":"error","message":"Cloudinary delete error: Failed to delete image: not found","stack":"Error: Failed to delete image: not found\n    at deleteImageFromCloudinary (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\utils\\cloudinary.utils.ts:92:13)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:116:5","timestamp":"2025-12-26 13:53:55"}
+{"level":"error","message":"Delete error: Failed to delete image: Failed to delete image: not found","timestamp":"2025-12-26 13:53:55"}
+{"level":"error","message":"Failed to delete image: Failed to delete image: not found","method":"DELETE","stack":"Error: Failed to delete image: Failed to delete image: not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:126:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 13:53:55","url":"/api/upload/image"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/about/ybscxuoqo5eipz32ki1l","timestamp":"2025-12-26 13:54:11"}
+{"level":"info","message":"About image uploaded by admin: admin@rass.com","timestamp":"2025-12-26 13:54:11"}
+{"level":"error","message":"Cloudinary delete error: Failed to delete image: not found","stack":"Error: Failed to delete image: not found\n    at deleteImageFromCloudinary (C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\utils\\cloudinary.utils.ts:92:13)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:116:5","timestamp":"2025-12-26 13:56:33"}
+{"level":"error","message":"Delete error: Failed to delete image: Failed to delete image: not found","timestamp":"2025-12-26 13:56:33"}
+{"level":"error","message":"Failed to delete image: Failed to delete image: not found","method":"DELETE","stack":"Error: Failed to delete image: Failed to delete image: not found\n    at C:\\Users\\HP\\OneDrive\\Desktop\\RASS Engineering\\Backend\\src\\controllers\\cloudinary.controller.ts:126:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-12-26 13:56:33","url":"/api/upload/image"}

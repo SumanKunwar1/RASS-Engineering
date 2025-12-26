@@ -11,9 +11,10 @@ interface PageHeaderProps {
     onClick: () => void;
     icon?: React.ElementType;
   };
+  children?: React.ReactNode; // ✅ ADDED: Accept children
 }
 
-export function PageHeader({ title, description, action }: PageHeaderProps) {
+export function PageHeader({ title, description, action, children }: PageHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
@@ -22,16 +23,19 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
           <p className="text-muted-foreground mt-1">{description}</p>
         )}
       </div>
-      {action && (
-        <Button onClick={action.onClick} className="shrink-0">
-          {action.icon ? (
-            <action.icon size={16} className="mr-2" />
-          ) : (
-            <Plus size={16} className="mr-2" />
-          )}
-          {action.label}
-        </Button>
-      )}
+      <div className="flex items-center gap-3">
+        {children}
+        {action && (
+          <Button onClick={action.onClick} className="shrink-0">
+            {action.icon ? (
+              <action.icon size={16} className="mr-2" />
+            ) : (
+              <Plus size={16} className="mr-2" />
+            )}
+            {action.label}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

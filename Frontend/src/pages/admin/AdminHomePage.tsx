@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { PageHeader, ContentCard } from '@/components/admin/PageHeader';
 import { FormModal } from '@/components/admin/FormModal';
@@ -6,10 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { HeroSection } from '@/types/admin';
 import { toast } from 'sonner';
-import { Pencil, Plus, Trash2, Image as ImageIcon, Phone, Mail, Save, X, Upload } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Pencil, Plus, Trash2, Phone, Mail, Upload, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import * as Icons from 'lucide-react';
 
@@ -18,20 +16,6 @@ interface HeroButton {
   label: string;
   route: string;
   variant?: 'primary' | 'outline';
-}
-
-interface AboutSection {
-  id: string;
-  title: string;
-  subtitle: string;
-  description1: string;
-  description2: string;
-  image: string;
-  managingDirector: string;
-  excerpt?: string;
-  content?: string;
-  author?: string;
-  [key: string]: any;
 }
 
 interface Service {
@@ -43,68 +27,61 @@ interface Service {
 }
 
 interface ContactInfo {
+  heading: string;
+  subheading: string;
   phone: string;
   email: string;
-  heading?: string;
-  subheading?: string;
-  address?: string;
-  mapUrl?: string;
-  workingHours?: string;
-  socialLinks?: {
-    facebook?: string;
-    twitter?: string;
-    linkedin?: string;
-    instagram?: string;
-  };
   [key: string]: any;
 }
 
 export default function AdminHome() {
-  const { state, dispatch } = useAdmin();
+  const { 
+    state, 
+    saveHeroSection, 
+    saveAboutSection, 
+    saveServices, 
+    saveContactCTA,
+    uploadImages,
+    deleteImage,
+    loadHomepageData,
+    isLoading 
+  } = useAdmin();
   
   // Hero Section State
   const [isEditingHero, setIsEditingHero] = useState(false);
-  const [heroData, setHeroData] = useState<HeroSection>(state.hero);
-  const [heroImages, setHeroImages] = useState<string[]>(state.hero.images);
-  const [heroTitle, setHeroTitle] = useState<string>(state.hero.title || '32+ Years of');
-  const [heroTitleHighlight, setHeroTitleHighlight] = useState<string>(state.hero.titleHighlight || 'Engineering Excellence');
-  const [heroSubtitle, setHeroSubtitle] = useState<string>(state.hero.subtitle || 'Specialized Construction Solutions & Engineering Services');
-  const [heroButtons, setHeroButtons] = useState<HeroButton[]>(state.hero.buttons || [
-    { id: '1', label: 'View Services', route: '/services', variant: 'primary' },
-    { id: '2', label: 'Request Consultation', route: '/request-quote', variant: 'outline' }
-  ]);
+  const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [heroTitle, setHeroTitle] = useState<string>('');
+  const [heroTitleHighlight, setHeroTitleHighlight] = useState<string>('');
+  const [heroSubtitle, setHeroSubtitle] = useState<string>('');
+  const [heroButtons, setHeroButtons] = useState<HeroButton[]>([]);
   const [isAddingButton, setIsAddingButton] = useState(false);
   const [editingButton, setEditingButton] = useState<HeroButton | null>(null);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   // About Section State
   const [isEditingAbout, setIsEditingAbout] = useState(false);
-  const [aboutData, setAboutData] = useState<AboutSection>({
-    id: 'about-section',
-    title: 'Building Trust Since 2050 B.S.',
-    subtitle: 'ABOUT US',
-    description1: 'Under the visionary leadership of Managing Director, RASS Engineering has been at the forefront of specialized construction solutions for over three decades.',
-    description2: 'We combine advanced technologies with time-tested engineering principles to deliver exceptional results that stand the test of time.',
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80',
-    managingDirector: 'Ram Kumar Shrestha'
+  const [aboutData, setAboutData] = useState({
+    subtitle: '',
+    title: '',
+    description1: '',
+    description2: '',
+    image: '',
+    managingDirector: ''
   });
 
   // Services State
   const [isEditingService, setIsEditingService] = useState(false);
   const [isAddingService, setIsAddingService] = useState(false);
-  const [services, setServices] = useState<Service[]>([
-    { id: '1', title: 'Deep Foundation', description: 'Specialized in pile foundation and deep excavation works', icon: 'Hammer' },
-    { id: '2', title: 'Structural Works', description: 'Complete structural engineering solutions', icon: 'Building2' },
-    { id: '3', title: 'Earth Retention', description: 'Advanced shoring and retaining systems', icon: 'Mountain' }
-  ]);
+  const [services, setServices] = useState<Service[]>([]);
   const [currentService, setCurrentService] = useState<Service | null>(null);
 
   // Contact Info State
   const [isEditingContact, setIsEditingContact] = useState(false);
   const [contactData, setContactData] = useState<ContactInfo>({
-    heading: 'Ready to Start Your Project?',
-    subheading: 'Get a free site inspection and consultation from our expert engineers',
-    phone: '+977-01-4782881',
-    email: 'info@rassengineering.com'
+    heading: '',
+    subheading: '',
+    phone: '',
+    email: ''
   });
 
   // Available icons for services
@@ -113,43 +90,151 @@ export default function AdminHome() {
     'Construction', 'Drill', 'Bolt', 'Cog', 'Settings', 'Tool'
   ];
 
-  // ==================== HERO SECTION HANDLERS ====================
-  const handleSaveHero = (e: React.FormEvent) => {
-  e.preventDefault();
-  const updatedHero = {
-    ...heroData,
-    title: heroTitle,
-    titleHighlight: heroTitleHighlight,
-    subtitle: heroSubtitle,
-    buttons: heroButtons,
-    images: heroImages
-  };
-  dispatch({ 
-    type: 'SET_HERO' as const, 
-    payload: updatedHero 
-  });
-  setIsEditingHero(false);
-  toast.success('Hero section updated successfully!');
-};
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const base64 = event.target?.result as string;
-          setHeroImages([...heroImages, base64]);
-          toast.success('Image added!');
-        };
-        reader.readAsDataURL(file);
+  // Load data on component mount and when state changes
+  useEffect(() => {
+    if (state.hero) {
+      setHeroImages(state.hero.images || []);
+      setHeroTitle(state.hero.title || '32+ Years of');
+      setHeroTitleHighlight(state.hero.titleHighlight || 'Engineering Excellence');
+      setHeroSubtitle(state.hero.subtitle || 'Specialized Construction Solutions & Engineering Services');
+      setHeroButtons(state.hero.buttons || []);
+    }
+    
+    if (state.services) {
+      setServices(state.services);
+    }
+    
+    if (state.about) {
+      const managingDirector = typeof state.about.managingDirector === 'object' 
+        ? state.about.managingDirector.name || ''
+        : state.about.managingDirector || '';
+        
+      setAboutData({
+        subtitle: state.about.subtitle || 'ABOUT US',
+        title: state.about.title || 'Building Trust Since 2050 B.S.',
+        description1: state.about.description1 || '',
+        description2: state.about.description2 || '',
+        image: state.about.image || '',
+        managingDirector: managingDirector
       });
+    }
+    
+    if (state.contact) {
+      setContactData({
+        heading: state.contact.heading || 'Ready to Start Your Project?',
+        subheading: state.contact.subheading || 'Get a free site inspection and consultation from our expert engineers',
+        phone: state.contact.phone || '+977-01-4782881',
+        email: state.contact.email || 'info@rassengineering.com'
+      });
+    }
+  }, [state]);
+
+  // ==================== HERO SECTION HANDLERS ====================
+  const handleSaveHero = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const updatedHero = {
+      title: heroTitle,
+      titleHighlight: heroTitleHighlight,
+      subtitle: heroSubtitle,
+      buttons: heroButtons,
+      images: heroImages
+    };
+    
+    try {
+      await saveHeroSection(updatedHero);
+      setIsEditingHero(false);
+      toast.success('Hero section updated successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save hero section');
     }
   };
 
-  const handleRemoveImage = (index: number) => {
-    setHeroImages(heroImages.filter((_, i) => i !== index));
-    toast.success('Image removed!');
+  // ==================== HERO IMAGE UPLOAD - AUTO-SAVES ====================
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImages(true);
+    
+    try {
+      console.log('Uploading', files.length, 'hero images...');
+      
+      // Upload images to Cloudinary
+      const uploadedImages = await uploadImages(Array.from(files), 'hero');
+      console.log('Upload successful:', uploadedImages);
+      
+      // Get the new image URLs
+      const newImageUrls = uploadedImages.map(img => img.url);
+      
+      // Update local state with new images
+      const updatedImages = [...heroImages, ...newImageUrls];
+      setHeroImages(updatedImages);
+      
+      // IMPORTANT: Auto-save to database immediately
+      console.log('Saving to database...');
+      await saveHeroSection({
+        title: heroTitle,
+        titleHighlight: heroTitleHighlight,
+        subtitle: heroSubtitle,
+        buttons: heroButtons,
+        images: updatedImages
+      });
+      
+      toast.success(`${uploadedImages.length} image(s) uploaded and saved!`);
+    } catch (error: any) {
+      console.error('Hero upload error:', error);
+      toast.error(error.message || 'Failed to upload images');
+    } finally {
+      setUploadingImages(false);
+      e.target.value = '';
+    }
+  };
+
+  // ==================== HERO IMAGE REMOVE - AUTO-SAVES ====================
+  const handleRemoveHeroImage = async (index: number) => {
+    if (!confirm('Are you sure you want to delete this image?')) {
+      return;
+    }
+
+    const imageToRemove = heroImages[index];
+    console.log('Removing image:', imageToRemove);
+    
+    // Delete from Cloudinary if it's a Cloudinary URL
+    if (imageToRemove.includes('cloudinary.com')) {
+      try {
+        console.log('Deleting from Cloudinary...');
+        await deleteImage(imageToRemove);
+        console.log('Deleted from Cloudinary successfully');
+      } catch (error: any) {
+        console.error('Cloudinary delete error:', error);
+        toast.error('Failed to delete from Cloudinary: ' + error.message);
+        return; // Stop if Cloudinary delete fails
+      }
+    }
+    
+    // Update local state (remove image)
+    const updatedImages = heroImages.filter((_, i) => i !== index);
+    setHeroImages(updatedImages);
+    
+    // IMPORTANT: Auto-save to database immediately
+    try {
+      console.log('Saving updated images to database...');
+      await saveHeroSection({
+        title: heroTitle,
+        titleHighlight: heroTitleHighlight,
+        subtitle: heroSubtitle,
+        buttons: heroButtons,
+        images: updatedImages
+      });
+      
+      toast.success('Image removed and saved successfully!');
+    } catch (error: any) {
+      console.error('Save error:', error);
+      toast.error('Failed to save changes');
+      // Revert the local state if save failed
+      setHeroImages(heroImages);
+    }
   };
 
   const handleImageUrlChange = (index: number, url: string) => {
@@ -161,31 +246,33 @@ export default function AdminHome() {
   // ==================== HERO BUTTONS HANDLERS ====================
   const handleAddButton = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingButton?.label && editingButton?.route) {
-      const newButton: HeroButton = {
-        ...editingButton,
-        id: editingButton.id || Date.now().toString()
-      };
-      
-      if (editingButton.id && heroButtons.find(b => b.id === editingButton.id)) {
-        // Update existing button
-        setHeroButtons(heroButtons.map(b => b.id === editingButton.id ? newButton : b));
-        toast.success('Button updated successfully!');
-      } else {
-        // Add new button
-        setHeroButtons([...heroButtons, newButton]);
-        toast.success('Button added successfully!');
-      }
-      
-      setEditingButton(null);
-      setIsAddingButton(false);
-    } else {
+    
+    if (!editingButton?.label || !editingButton?.route) {
       toast.error('Please fill in all fields');
+      return;
     }
+    
+    const newButton: HeroButton = {
+      id: editingButton.id || Date.now().toString(),
+      label: editingButton.label,
+      route: editingButton.route,
+      variant: editingButton.variant || 'primary'
+    };
+    
+    if (editingButton.id && heroButtons.find(b => b.id === editingButton.id)) {
+      setHeroButtons(heroButtons.map(b => b.id === editingButton.id ? newButton : b));
+      toast.success('Button updated successfully!');
+    } else {
+      setHeroButtons([...heroButtons, newButton]);
+      toast.success('Button added successfully!');
+    }
+    
+    setEditingButton(null);
+    setIsAddingButton(false);
   };
 
   const handleEditButton = (button: HeroButton) => {
-    setEditingButton(button);
+    setEditingButton({ ...button });
     setIsAddingButton(true);
   };
 
@@ -197,81 +284,160 @@ export default function AdminHome() {
   };
 
   // ==================== ABOUT SECTION HANDLERS ====================
- const handleSaveAbout = (e: React.FormEvent) => {
-  e.preventDefault();
-  dispatch({ 
-    type: 'SET_ABOUT' as const, 
-    payload: aboutData as any
-  });
-  setIsEditingAbout(false);
-  toast.success('About section updated successfully!');
-};
+  const handleSaveAbout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      await saveAboutSection(aboutData);
+      setIsEditingAbout(false);
+      toast.success('About section updated successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save about section');
+    }
+  };
 
-  const handleAboutImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ==================== ABOUT IMAGE UPLOAD - AUTO-SAVES ====================
+  const handleAboutImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        setAboutData({ ...aboutData, image: base64 });
-        toast.success('Image uploaded!');
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setUploadingImages(true);
+    
+    try {
+      console.log('Uploading about image...');
+      
+      // Upload image to Cloudinary
+      const uploadedImages = await uploadImages([file], 'about');
+      console.log('About upload successful:', uploadedImages);
+      
+      if (uploadedImages.length > 0) {
+        const newImageUrl = uploadedImages[0].url;
+        
+        // Update local state
+        const updatedAboutData = { ...aboutData, image: newImageUrl };
+        setAboutData(updatedAboutData);
+        
+        // IMPORTANT: Auto-save to database immediately
+        console.log('Saving about section to database...');
+        await saveAboutSection(updatedAboutData);
+        
+        toast.success('About image uploaded and saved successfully!');
+      }
+    } catch (error: any) {
+      console.error('About upload error:', error);
+      toast.error(error.message || 'Failed to upload image');
+    } finally {
+      setUploadingImages(false);
+      e.target.value = '';
     }
   };
 
   // ==================== SERVICE HANDLERS ====================
-  const handleAddService = (e: React.FormEvent) => {
+  const handleAddService = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentService?.title && currentService?.description) {
-      setServices([...services, { ...currentService, id: Date.now().toString() }]);
+    
+    if (!currentService?.title || !currentService?.description || !currentService?.icon) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    
+    const newService = {
+      ...currentService,
+      id: Date.now().toString()
+    };
+    
+    const updatedServices = [...services, newService];
+    
+    try {
+      await saveServices(updatedServices);
+      setServices(updatedServices);
       setCurrentService(null);
       setIsAddingService(false);
       toast.success('Service added successfully!');
-    } else {
-      toast.error('Please fill in all fields');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to add service');
     }
   };
 
   const handleEditService = (service: Service) => {
-    setCurrentService(service);
+    setCurrentService({ ...service });
     setIsEditingService(true);
   };
 
-  const handleUpdateService = (e: React.FormEvent) => {
+  const handleUpdateService = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentService) {
-      setServices(services.map(s => s.id === currentService.id ? currentService : s));
+    
+    if (!currentService) return;
+    
+    const updatedServices = services.map(s => 
+      s.id === currentService.id ? currentService : s
+    );
+    
+    try {
+      await saveServices(updatedServices);
+      setServices(updatedServices);
       setCurrentService(null);
       setIsEditingService(false);
       toast.success('Service updated successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update service');
     }
   };
 
-  const handleDeleteService = (id: string) => {
-    if (confirm('Are you sure you want to delete this service?')) {
-      setServices(services.filter(s => s.id !== id));
+  const handleDeleteService = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this service?')) return;
+    
+    const updatedServices = services.filter(s => s.id !== id);
+    
+    try {
+      await saveServices(updatedServices);
+      setServices(updatedServices);
       toast.success('Service deleted successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete service');
     }
   };
 
   // ==================== CONTACT INFO HANDLERS ====================
- const handleSaveContact = (e: React.FormEvent) => {
-  e.preventDefault();
-  dispatch({ 
-    type: 'SET_CONTACT' as const, 
-    payload: contactData 
-  });
-  setIsEditingContact(false);
-  toast.success('Contact information updated successfully!');
-};
+  const handleSaveContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      await saveContactCTA(contactData);
+      setIsEditingContact(false);
+      toast.success('Contact information updated successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save contact information');
+    }
+  };
+
+  // Refresh data
+  const handleRefresh = async () => {
+    try {
+      await loadHomepageData();
+      toast.success('Data refreshed successfully!');
+    } catch (error: any) {
+      toast.error('Failed to refresh data');
+    }
+  };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Home Page Management"
         description="Manage all sections of your homepage"
-      />
+      >
+        <Button 
+          variant="outline" 
+          onClick={handleRefresh}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : null}
+          Refresh Data
+        </Button>
+      </PageHeader>
 
       <Tabs defaultValue="hero" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
@@ -286,20 +452,15 @@ export default function AdminHome() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold">Hero Section</h2>
             <Button
-              onClick={() => {
-                setHeroData(state.hero);
-                setHeroImages(state.hero.images);
-                setIsEditingHero(true);
-              }}
+              onClick={() => setIsEditingHero(true)}
               className="bg-[#F46A1F] hover:bg-[#d85a15]"
+              disabled={isLoading}
             >
               <Pencil size={16} className="mr-2" />
               Edit Hero
             </Button>
           </div>
-          <ContentCard 
-            title="Hero Section"
-          >
+          <ContentCard title="Hero Section">
             <div className="space-y-4">
               {/* Preview */}
               <div className="p-6 bg-gradient-to-br from-gray-50 to-white rounded-lg border">
@@ -312,7 +473,6 @@ export default function AdminHome() {
                 </h3>
                 <p className="text-xl text-gray-600 mb-6">{heroSubtitle}</p>
                 
-                {/* Preview Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
                   {heroButtons.map((button) => (
                     <Button 
@@ -330,15 +490,19 @@ export default function AdminHome() {
 
               {/* Images Gallery */}
               <div>
-                <h4 className="font-medium mb-3">Hero Carousel Images ({state.hero.images.length})</h4>
-                {state.hero.images.length > 0 ? (
+                <h4 className="font-medium mb-3">Hero Carousel Images ({heroImages.length})</h4>
+                {heroImages.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {state.hero.images.map((image, index) => (
+                    {heroImages.map((image, index) => (
                       <div key={index} className="relative group">
                         <img 
                           src={image} 
                           alt={`Hero ${index + 1}`}
                           className="w-full h-24 object-cover rounded-lg"
+                          onError={(e) => {
+                            console.error('Image failed to load:', image);
+                            e.currentTarget.src = 'https://via.placeholder.com/400x300?text=Error+Loading+Image';
+                          }}
                         />
                         <div className="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <span className="text-white text-sm">Image {index + 1}</span>
@@ -360,6 +524,7 @@ export default function AdminHome() {
             title="Edit Hero Section"
             description="Update hero content and manage carousel images"
             onSubmit={handleSaveHero}
+            isLoading={isLoading}
           >
             <div className="space-y-6">
               {/* Text Content */}
@@ -373,6 +538,7 @@ export default function AdminHome() {
                     value={heroTitle}
                     onChange={(e) => setHeroTitle(e.target.value)}
                     placeholder="32+ Years of"
+                    disabled={isLoading}
                   />
                   <p className="text-xs text-muted-foreground mt-1">This is the big text part of the heading</p>
                 </div>
@@ -384,6 +550,7 @@ export default function AdminHome() {
                     value={heroTitleHighlight}
                     onChange={(e) => setHeroTitleHighlight(e.target.value)}
                     placeholder="Engineering Excellence"
+                    disabled={isLoading}
                   />
                   <p className="text-xs text-muted-foreground mt-1">This text appears in the accent color (#F46A1F)</p>
                 </div>
@@ -395,6 +562,7 @@ export default function AdminHome() {
                     value={heroSubtitle}
                     onChange={(e) => setHeroSubtitle(e.target.value)}
                     placeholder="Specialized Construction Solutions & Engineering Services"
+                    disabled={isLoading}
                   />
                   <p className="text-xs text-muted-foreground mt-1">This is the small descriptive text</p>
                 </div>
@@ -408,10 +576,11 @@ export default function AdminHome() {
                     type="button"
                     size="sm"
                     onClick={() => {
-                      setEditingButton(null);
+                      setEditingButton({ id: '', label: '', route: '', variant: 'primary' });
                       setIsAddingButton(true);
                     }}
                     className="bg-[#F46A1F] hover:bg-[#d85a15]"
+                    disabled={isLoading}
                   >
                     <Plus size={14} className="mr-1" />
                     Add Button
@@ -432,6 +601,7 @@ export default function AdminHome() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleEditButton(button)}
+                            disabled={isLoading}
                           >
                             <Pencil size={14} />
                           </Button>
@@ -441,6 +611,7 @@ export default function AdminHome() {
                             variant="ghost"
                             className="text-destructive hover:text-destructive"
                             onClick={() => handleDeleteButton(button.id)}
+                            disabled={isLoading}
                           >
                             <Trash2 size={14} />
                           </Button>
@@ -455,7 +626,15 @@ export default function AdminHome() {
 
               {/* Image Management */}
               <div className="space-y-4">
-                <h4 className="font-semibold text-sm">Manage Carousel Images</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm">Manage Carousel Images</h4>
+                  {uploadingImages && (
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading...
+                    </div>
+                  )}
+                </div>
                 
                 {/* Upload New Images */}
                 <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors">
@@ -463,13 +642,19 @@ export default function AdminHome() {
                     type="file"
                     multiple
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={handleHeroImageUpload}
                     className="hidden"
                     id="hero-image-upload"
+                    disabled={isLoading || uploadingImages}
                   />
-                  <label htmlFor="hero-image-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                  <label 
+                    htmlFor="hero-image-upload" 
+                    className={`cursor-pointer flex flex-col items-center gap-2 ${(isLoading || uploadingImages) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
                     <Upload size={24} className="text-muted-foreground" />
-                    <span className="text-sm font-medium">Click to upload or drag images</span>
+                    <span className="text-sm font-medium">
+                      {uploadingImages ? 'Uploading...' : 'Click to upload or drag images'}
+                    </span>
                     <span className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</span>
                   </label>
                 </div>
@@ -484,20 +669,25 @@ export default function AdminHome() {
                           src={image} 
                           alt={`Preview ${index + 1}`}
                           className="w-16 h-16 object-cover rounded"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://via.placeholder.com/64x64?text=Error';
+                          }}
                         />
                         <div className="flex-1 min-w-0">
                           <Input
                             value={image}
                             onChange={(e) => handleImageUrlChange(index, e.target.value)}
-                            placeholder="Image URL or base64"
+                            placeholder="Image URL"
                             className="text-xs"
+                            disabled={isLoading}
                           />
                         </div>
                         <Button
                           size="sm"
                           variant="ghost"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => handleRemoveImage(index)}
+                          onClick={() => handleRemoveHeroImage(index)}
+                          disabled={isLoading}
                         >
                           <Trash2 size={16} />
                         </Button>
@@ -516,6 +706,7 @@ export default function AdminHome() {
             title={editingButton?.id ? "Edit Button" : "Add New Button"}
             description={editingButton?.id ? "Update button details" : "Create a new CTA button"}
             onSubmit={handleAddButton}
+            isLoading={isLoading}
           >
             <div className="space-y-4">
               <div>
@@ -523,8 +714,9 @@ export default function AdminHome() {
                 <Input
                   id="button-label"
                   value={editingButton?.label || ''}
-                  onChange={(e) => setEditingButton(prev => prev ? { ...prev, label: e.target.value } : null)}
+                  onChange={(e) => setEditingButton(prev => prev ? { ...prev, label: e.target.value } : { id: '', label: e.target.value, route: '', variant: 'primary' })}
                   placeholder="View Services"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -533,8 +725,9 @@ export default function AdminHome() {
                 <Input
                   id="button-route"
                   value={editingButton?.route || ''}
-                  onChange={(e) => setEditingButton(prev => prev ? { ...prev, route: e.target.value } : null)}
+                  onChange={(e) => setEditingButton(prev => prev ? { ...prev, route: e.target.value } : { id: '', label: '', route: e.target.value, variant: 'primary' })}
                   placeholder="/services"
+                  disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground mt-1">e.g., /services, /request-quote, /about</p>
               </div>
@@ -544,8 +737,9 @@ export default function AdminHome() {
                 <select
                   id="button-variant"
                   value={editingButton?.variant || 'primary'}
-                  onChange={(e) => setEditingButton(prev => prev ? { ...prev, variant: e.target.value as 'primary' | 'outline' } : null)}
+                  onChange={(e) => setEditingButton(prev => prev ? { ...prev, variant: e.target.value as 'primary' | 'outline' } : { id: '', label: '', route: '', variant: e.target.value as 'primary' | 'outline' })}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  disabled={isLoading}
                 >
                   <option value="primary">Primary (Orange Background)</option>
                   <option value="outline">Outline (Black Border)</option>
@@ -562,16 +756,14 @@ export default function AdminHome() {
             <Button
               onClick={() => setIsEditingAbout(true)}
               className="bg-[#F46A1F] hover:bg-[#d85a15]"
+              disabled={isLoading}
             >
               <Pencil size={16} className="mr-2" />
               Edit About
             </Button>
           </div>
-          <ContentCard 
-            title="About Us Section"
-          >
+          <ContentCard title="About Us Section">
             <div className="space-y-4">
-              {/* Preview */}
               <div className="grid md:grid-cols-2 gap-6 p-6 bg-muted/30 rounded-lg">
                 <div>
                   <div className="text-[#F46A1F] font-semibold mb-2">{aboutData.subtitle}</div>
@@ -584,11 +776,16 @@ export default function AdminHome() {
                   </div>
                 </div>
                 <div>
-                  <img 
-                    src={aboutData.image} 
-                    alt="About"
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
+                  {aboutData.image && (
+                    <img 
+                      src={aboutData.image} 
+                      alt="About"
+                      className="w-full h-64 object-cover rounded-lg"
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://via.placeholder.com/400x300?text=Error+Loading+Image';
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -601,6 +798,7 @@ export default function AdminHome() {
             title="Edit About Us Section"
             description="Update about section content and image"
             onSubmit={handleSaveAbout}
+            isLoading={isLoading}
           >
             <div className="space-y-4">
               <div>
@@ -610,6 +808,7 @@ export default function AdminHome() {
                   value={aboutData.subtitle}
                   onChange={(e) => setAboutData({ ...aboutData, subtitle: e.target.value })}
                   placeholder="ABOUT US"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -620,6 +819,7 @@ export default function AdminHome() {
                   value={aboutData.title}
                   onChange={(e) => setAboutData({ ...aboutData, title: e.target.value })}
                   placeholder="Building Trust Since 2050 B.S."
+                  disabled={isLoading}
                 />
               </div>
 
@@ -631,6 +831,7 @@ export default function AdminHome() {
                   onChange={(e) => setAboutData({ ...aboutData, description1: e.target.value })}
                   rows={3}
                   placeholder="First description paragraph..."
+                  disabled={isLoading}
                 />
               </div>
 
@@ -642,6 +843,7 @@ export default function AdminHome() {
                   onChange={(e) => setAboutData({ ...aboutData, description2: e.target.value })}
                   rows={3}
                   placeholder="Second description paragraph..."
+                  disabled={isLoading}
                 />
               </div>
 
@@ -652,6 +854,7 @@ export default function AdminHome() {
                   value={aboutData.managingDirector}
                   onChange={(e) => setAboutData({ ...aboutData, managingDirector: e.target.value })}
                   placeholder="Ram Kumar Shrestha"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -662,14 +865,22 @@ export default function AdminHome() {
                   value={aboutData.image}
                   onChange={(e) => setAboutData({ ...aboutData, image: e.target.value })}
                   placeholder="https://..."
+                  disabled={isLoading}
                 />
                 <div className="mt-3">
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleAboutImageUpload}
-                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer"
+                    className={`block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer ${isLoading || uploadingImages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={isLoading || uploadingImages}
                   />
+                  {uploadingImages && (
+                    <div className="mt-2 text-sm text-muted-foreground flex items-center">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading image...
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -682,19 +893,18 @@ export default function AdminHome() {
             <h2 className="text-2xl font-bold">Services</h2>
             <Button
               onClick={() => {
-                setCurrentService(null);
+                setCurrentService({ id: '', title: '', description: '', icon: 'Hammer' });
                 setIsAddingService(true);
               }}
               className="bg-[#F46A1F] hover:bg-[#d85a15]"
+              disabled={isLoading}
             >
               <Plus size={16} className="mr-2" />
               Add Service
             </Button>
           </div>
 
-          <ContentCard 
-            title="Service Cards"
-          >
+          <ContentCard title="Service Cards">
             {services.length > 0 ? (
               <div className="space-y-3">
                 {services.map((service) => {
@@ -717,6 +927,7 @@ export default function AdminHome() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleEditService(service)}
+                          disabled={isLoading}
                         >
                           <Pencil size={14} />
                         </Button>
@@ -725,6 +936,7 @@ export default function AdminHome() {
                           variant="ghost"
                           className="text-destructive hover:text-destructive"
                           onClick={() => handleDeleteService(service.id)}
+                          disabled={isLoading}
                         >
                           <Trash2 size={14} />
                         </Button>
@@ -745,6 +957,7 @@ export default function AdminHome() {
             title="Add New Service"
             description="Create a new service card"
             onSubmit={handleAddService}
+            isLoading={isLoading}
           >
             <div className="space-y-4">
               <div>
@@ -752,8 +965,9 @@ export default function AdminHome() {
                 <Input
                   id="service-title"
                   value={currentService?.title || ''}
-                  onChange={(e) => setCurrentService(prev => prev ? { ...prev, title: e.target.value } : null)}
+                  onChange={(e) => setCurrentService(prev => ({ ...prev, title: e.target.value, id: prev?.id || '', description: prev?.description || '', icon: prev?.icon || 'Hammer' }))}
                   placeholder="Deep Foundation"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -762,9 +976,10 @@ export default function AdminHome() {
                 <Textarea
                   id="service-desc"
                   value={currentService?.description || ''}
-                  onChange={(e) => setCurrentService(prev => prev ? { ...prev, description: e.target.value } : null)}
+                  onChange={(e) => setCurrentService(prev => ({ ...prev, description: e.target.value, id: prev?.id || '', title: prev?.title || '', icon: prev?.icon || 'Hammer' }))}
                   placeholder="Specialized in pile foundation and deep excavation works"
                   rows={3}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -773,8 +988,9 @@ export default function AdminHome() {
                 <select
                   id="service-icon"
                   value={currentService?.icon || 'Hammer'}
-                  onChange={(e) => setCurrentService(prev => prev ? { ...prev, icon: e.target.value } : null)}
+                  onChange={(e) => setCurrentService(prev => ({ ...prev, icon: e.target.value, id: prev?.id || '', title: prev?.title || '', description: prev?.description || '' }))}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  disabled={isLoading}
                 >
                   {availableIcons.map(icon => (
                     <option key={icon} value={icon}>{icon}</option>
@@ -798,6 +1014,7 @@ export default function AdminHome() {
             title="Edit Service"
             description="Update service details"
             onSubmit={handleUpdateService}
+            isLoading={isLoading}
           >
             <div className="space-y-4">
               <div>
@@ -806,6 +1023,7 @@ export default function AdminHome() {
                   id="edit-service-title"
                   value={currentService?.title || ''}
                   onChange={(e) => setCurrentService(prev => prev ? { ...prev, title: e.target.value } : null)}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -816,6 +1034,7 @@ export default function AdminHome() {
                   value={currentService?.description || ''}
                   onChange={(e) => setCurrentService(prev => prev ? { ...prev, description: e.target.value } : null)}
                   rows={3}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -826,6 +1045,7 @@ export default function AdminHome() {
                   value={currentService?.icon || 'Hammer'}
                   onChange={(e) => setCurrentService(prev => prev ? { ...prev, icon: e.target.value } : null)}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  disabled={isLoading}
                 >
                   {availableIcons.map(icon => (
                     <option key={icon} value={icon}>{icon}</option>
@@ -843,14 +1063,13 @@ export default function AdminHome() {
             <Button
               onClick={() => setIsEditingContact(true)}
               className="bg-[#F46A1F] hover:bg-[#d85a15]"
+              disabled={isLoading}
             >
               <Pencil size={16} className="mr-2" />
               Edit Contact
             </Button>
           </div>
-          <ContentCard 
-            title="Contact CTA Section"
-          >
+          <ContentCard title="Contact CTA Section">
             <div className="p-6 bg-black text-white rounded-lg">
               <h3 className="text-3xl md:text-4xl font-bold mb-4">{contactData.heading}</h3>
               <p className="text-lg text-gray-300 mb-8">
@@ -886,15 +1105,17 @@ export default function AdminHome() {
             title="Edit Contact CTA Section"
             description="Update contact information and CTA heading"
             onSubmit={handleSaveContact}
+            isLoading={isLoading}
           >
             <div className="space-y-4">
               <div>
                 <Label htmlFor="contact-heading">CTA Heading</Label>
                 <Input
                   id="contact-heading"
-                  value={contactData.heading || ''}
+                  value={contactData.heading}
                   onChange={(e) => setContactData({ ...contactData, heading: e.target.value })}
                   placeholder="Ready to Start Your Project?"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -902,10 +1123,11 @@ export default function AdminHome() {
                 <Label htmlFor="contact-subheading">CTA Subheading</Label>
                 <Textarea
                   id="contact-subheading"
-                  value={contactData.subheading || ''}
+                  value={contactData.subheading}
                   onChange={(e) => setContactData({ ...contactData, subheading: e.target.value })}
                   placeholder="Get a free site inspection and consultation from our expert engineers"
                   rows={2}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -916,6 +1138,7 @@ export default function AdminHome() {
                   value={contactData.phone}
                   onChange={(e) => setContactData({ ...contactData, phone: e.target.value })}
                   placeholder="+977-01-4782881"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -927,6 +1150,7 @@ export default function AdminHome() {
                   value={contactData.email}
                   onChange={(e) => setContactData({ ...contactData, email: e.target.value })}
                   placeholder="info@rassengineering.com"
+                  disabled={isLoading}
                 />
               </div>
 

@@ -1,22 +1,42 @@
-// Admin Panel Type Definitions
-// These types mirror the structure of your frontend pages for CRUD operations
-// Updated to support AdminHomePage component with full editing capabilities
+// Admin Panel Type Definitions - FIXED VERSION
+// Fixed the managingDirector type conflict
+
+// ==================== HERO BUTTON ====================
+export interface HeroButton {
+  id: string;
+  label: string;
+  route: string;
+  variant?: 'primary' | 'outline';
+}
 
 // ==================== HERO SECTION ====================
 export interface HeroSection {
   id?: string;
   title: string;
+  titleHighlight: string;
   subtitle: string;
-  ctaText: string;
+  images: string[];
+  buttons?: HeroButton[];
+  ctaText?: string;
   ctaLink?: string;
-  images: string[]; // Array of base64 strings or URLs
   tagline?: string;
   excerpt?: string;
   content?: string;
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
+}
+
+// ==================== MANAGING DIRECTOR ====================
+export interface ManagingDirector {
+  id: string;
+  name: string;
+  position: string;
+  bio: string;
+  image: string;
+  email: string;
 }
 
 // ==================== ABOUT SECTION ====================
+// ✅ FIXED: managingDirector can be string OR object
 export interface AboutSection {
   id: string;
   title: string;
@@ -24,11 +44,11 @@ export interface AboutSection {
   description1: string;
   description2: string;
   image: string;
-  managingDirector: string;
+  managingDirector: string | ManagingDirector; // ✅ Now accepts both
   excerpt?: string;
   content?: string;
   author?: string;
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
 }
 
 // ==================== SERVICE ====================
@@ -41,12 +61,14 @@ export interface ServiceItem {
   image?: string;
   excerpt?: string;
   content?: string;
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
 }
 
 // Alias for compatibility
 export type Service = ServiceItem;
 
+// ... rest of the types remain the same (keep your existing code)
+// Just make sure to include all your existing types from the file
 // ==================== PROJECT ====================
 export interface ProjectItem {
   id: string;
@@ -61,7 +83,7 @@ export interface ProjectItem {
   status: 'completed' | 'ongoing' | 'upcoming';
   excerpt?: string;
   content?: string;
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
 }
 
 // ==================== BLOG ====================
@@ -76,7 +98,7 @@ export interface BlogPost {
   image: string;
   readTime: string;
   published: boolean;
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
 }
 
 // ==================== TEAM ====================
@@ -91,7 +113,7 @@ export interface TeamMember {
   phone?: string;
   excerpt?: string;
   content?: string;
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
 }
 
 // ==================== COMPANY VALUES ====================
@@ -102,7 +124,7 @@ export interface CompanyValue {
   description: string;
   excerpt?: string;
   content?: string;
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
 }
 
 // ==================== STATS ====================
@@ -116,37 +138,26 @@ export interface StatItem {
 // ==================== ABOUT CONTENT ====================
 export interface AboutContent {
   id?: string;
-  
-  // Hero Section
   heroTitle: string;
   heroSubtitle: string;
-  
-  // Mission & Vision
   mission: string;
   vision: string;
-  
-  // Story Section
   storyTitle?: string;
   history: string;
   storyImage?: string;
   foundedYear?: string;
   experience?: string;
   completedProjects?: string;
-  
-  // Leadership
   directorName?: string;
   directorPosition?: string;
   directorBio?: string;
   directorExperience?: string;
-  
-  // Related Collections
   values: CompanyValue[];
   team: TeamMember[];
   stats: StatItem[];
-  
   excerpt?: string;
   content?: string;
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
 }
 
 // ==================== CONTACT INFO ====================
@@ -167,7 +178,7 @@ export interface ContactInfo {
   };
   excerpt?: string;
   content?: string;
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
 }
 
 // ==================== FORM SUBMISSIONS ====================
@@ -204,14 +215,14 @@ export interface SiteSettings {
   seoTitle: string;
   seoDescription: string;
   googleAnalyticsId?: string;
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
 }
 
 // ==================== ADMIN STATE ====================
 export interface AdminState {
   hero: HeroSection;
   about?: AboutSection;
-  aboutContent?: AboutContent; // New comprehensive about content
+  aboutContent?: AboutContent;
   services: ServiceItem[];
   projects: ProjectItem[];
   blog: BlogPost[];
@@ -219,10 +230,11 @@ export interface AdminState {
   settings: SiteSettings;
   quoteSubmissions: QuoteSubmission[];
   contactSubmissions: ContactSubmission[];
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
 }
 
 // ==================== ADMIN ACTIONS ====================
+// ✅ FIXED: Properly typed union with exact payload types
 export type AdminActionType =
   | 'SET_HERO'
   | 'SET_ABOUT'
@@ -245,10 +257,11 @@ export type AdminActionType =
   | 'UPDATE_CONTACT_STATUS'
   | 'LOAD_STATE';
 
+// ✅ FIXED: Each action now has the correct payload type
 export type AdminAction =
-  | { type: 'SET_HERO'; payload: HeroSection }
-  | { type: 'SET_ABOUT'; payload: AboutSection }
-  | { type: 'SET_ABOUT_CONTENT'; payload: AboutContent }
+  | { type: 'SET_HERO'; payload: Partial<HeroSection> }
+  | { type: 'SET_ABOUT'; payload: Partial<AboutSection> }
+  | { type: 'SET_ABOUT_CONTENT'; payload: Partial<AboutContent> }
   | { type: 'ADD_SERVICE'; payload: ServiceItem }
   | { type: 'UPDATE_SERVICE'; payload: ServiceItem }
   | { type: 'DELETE_SERVICE'; payload: string }
@@ -261,8 +274,8 @@ export type AdminAction =
   | { type: 'UPDATE_BLOG'; payload: BlogPost }
   | { type: 'DELETE_BLOG'; payload: string }
   | { type: 'SET_BLOG'; payload: BlogPost[] }
-  | { type: 'SET_CONTACT'; payload: ContactInfo }
-  | { type: 'SET_SETTINGS'; payload: SiteSettings }
+  | { type: 'SET_CONTACT'; payload: Partial<ContactInfo> }
+  | { type: 'SET_SETTINGS'; payload: Partial<SiteSettings> }
   | { type: 'UPDATE_QUOTE_STATUS'; payload: { id: string; status: QuoteSubmission['status'] } }
   | { type: 'UPDATE_CONTACT_STATUS'; payload: { id: string; status: ContactSubmission['status'] } }
   | { type: 'LOAD_STATE'; payload: AdminState };
@@ -397,10 +410,10 @@ export interface ImageData {
 }
 
 export interface ImageUploadOptions {
-  maxSize?: number; // in bytes, default 5MB
-  formats?: string[]; // MIME types, default ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  maxSize?: number;
+  formats?: string[];
   compress?: boolean;
-  quality?: number; // 0-1, default 0.8
+  quality?: number;
 }
 
 // ==================== TOAST TYPES ====================

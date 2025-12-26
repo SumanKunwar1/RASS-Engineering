@@ -7,7 +7,7 @@ import './config/cloudinary'; // Initialize Cloudinary
 import logger from './utils/logger';
 import { seedAdmin } from './utils/seedAdmin';
 
-const PORT = process.env.PORT || 6000;
+const PORT = process.env.PORT || 5000;
 
 // Connect to Database and seed admin
 connectDB().then(() => {

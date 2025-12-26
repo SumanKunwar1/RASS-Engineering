@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, useState } from 'react';
+import axios, { AxiosInstance, AxiosError } from 'axios';
 import {
   AdminState,
   AdminAction,
@@ -15,153 +16,83 @@ import {
 
 // Auth types
 interface AdminUser {
+  id: string;
   email: string;
   name: string;
+  role: string;
 }
 
 const AUTH_STORAGE_KEY = 'rass_admin_auth';
+const TOKEN_STORAGE_KEY = 'rass_admin_token';
 
-// Initial state with mock data that mirrors your frontend
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// Initialize axios instance
+const apiClient: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 30000, // Increased timeout for image uploads
+});
+
+// Clear all auth data
+const clearAuthData = () => {
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+};
+
+// Add token to requests
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle response errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      clearAuthData();
+      window.location.href = '/admin/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Initial state
 const initialState: AdminState = {
   hero: {
-    id: '1',
-    title: 'Building Excellence Through Innovation',
-    subtitle: 'RASS Engineering & Construction Pvt. Ltd. offers professional construction and specialized engineering solutions with 31+ years of expertise.',
+    title: '32+ Years of',
+    titleHighlight: 'Engineering Excellence',
+    subtitle: 'Specialized Construction Solutions & Engineering Services',
     ctaText: 'Get Started',
     ctaLink: '/contact',
-    images: [
-      'https://res.cloudinary.com/dihev9qxc/image/upload/v1766306898/WhatsApp_Image_2025-12-21_at_14.10.49_itbaq8.jpg',
-      'https://res.cloudinary.com/dihev9qxc/image/upload/v1766306898/WhatsApp_Image_2025-12-21_at_14.10.50_ihyboi.jpg',
-      'https://res.cloudinary.com/dihev9qxc/image/upload/v1766306898/WhatsApp_Image_2025-12-21_at_14.10.50_1_ifq2a2.jpg',
-    ],
+    images: [],
+    buttons: []
   },
-  services: [
-    {
-      id: '1',
-      icon: 'Droplets',
-      title: 'Waterproofing Solutions',
-      description: 'Comprehensive waterproofing services for buildings, basements, and terraces.',
-      features: ['Basement waterproofing', 'Terrace treatment', 'Wall seepage solutions'],
-      image: '',
-    },
-    {
-      id: '2',
-      icon: 'Building',
-      title: 'Structural Retrofitting',
-      description: 'Strengthening and rehabilitation of existing structures.',
-      features: ['Carbon fiber wrapping', 'Jacketing works', 'Foundation repair'],
-      image: '',
-    },
-    {
-      id: '3',
-      icon: 'Wrench',
-      title: 'Specialized Engineering',
-      description: 'Advanced engineering solutions for complex construction challenges.',
-      features: ['Soil stabilization', 'Crack treatment', 'Expansion joint treatment'],
-      image: '',
-    },
-  ],
-  projects: [
-    {
-      id: '1',
-      title: 'Nepal Electricity Authority Building',
-      description: 'Complete waterproofing and structural retrofitting of the NEA headquarters.',
-      category: 'Commercial',
-      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800',
-      location: 'Kathmandu, Nepal',
-      year: '2023',
-      client: 'Nepal Electricity Authority',
-      features: ['Waterproofing', 'Structural repair', 'Facade treatment'],
-      status: 'completed',
-    },
-    {
-      id: '2',
-      title: 'Civil Hospital Renovation',
-      description: 'Major renovation including seismic retrofitting and waterproofing.',
-      category: 'Healthcare',
-      image: 'https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?w=800',
-      location: 'Lalitpur, Nepal',
-      year: '2024',
-      client: 'Ministry of Health',
-      features: ['Seismic retrofitting', 'Basement waterproofing', 'Crack repair'],
-      status: 'ongoing',
-    },
-  ],
-  blog: [
-    {
-      id: '1',
-      title: 'The Importance of Waterproofing in Nepali Climate',
-      excerpt: 'Learn why waterproofing is crucial for buildings in Nepal monsoon season.',
-      content: 'Full blog content here...',
-      author: 'Rabi Kumar Paudel',
-      date: '2024-01-15',
-      category: 'Waterproofing',
-      image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800',
-      readTime: '5 min',
-      published: true,
-    },
-    {
-      id: '2',
-      title: 'Structural Retrofitting: Protecting Your Investment',
-      excerpt: 'Understanding the benefits of structural retrofitting for older buildings.',
-      content: 'Full blog content here...',
-      author: 'Engineering Team',
-      date: '2024-02-10',
-      category: 'Engineering',
-      image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800',
-      readTime: '7 min',
-      published: true,
-    },
-  ],
+  services: [],
+  projects: [],
+  blog: [],
   about: {
     id: '1',
     title: 'About RASS Engineering',
     subtitle: '31+ Years of Engineering Excellence',
-    description1: 'To deliver exceptional engineering and construction solutions that exceed client expectations.',
-    description2: 'To be the leading construction and engineering company in Nepal, known for innovation and quality.',
-    description3: 'Founded in 1993, RASS Engineering has grown from a small team to one of the most trusted names in construction.',
+    description1: '',
+    description2: '',
     image: '',
-    managingDirector: {
-      id: '1',
-      name: 'Rabi Kumar Paudel',
-      position: 'Managing Director',
-      bio: 'With over 31 years of experience in the construction industry.',
-      image: '',
-      email: 'rabi@rassengineering.com',
-    },
-    values: [
-      { id: '1', icon: 'Award', title: 'Excellence', description: 'Committed to delivering the highest quality in every project' },
-      { id: '2', icon: 'Users', title: 'Client Focus', description: 'Building lasting relationships through exceptional service' },
-      { id: '3', icon: 'Target', title: 'Innovation', description: 'Embracing advanced technologies and modern techniques' },
-      { id: '4', icon: 'Eye', title: 'Integrity', description: 'Operating with transparency, honesty, and professional ethics' },
-    ],
-    team: [
-      {
-        id: '1',
-        name: 'Rabi Kumar Paudel',
-        position: 'Managing Director',
-        bio: 'With over 31 years of experience in the construction industry.',
-        image: '',
-        email: 'rabi@rassengineering.com',
-      },
-    ],
-    stats: [
-      { label: 'Years Experience', value: '31+' },
-      { label: 'Projects Completed', value: '500+' },
-      { label: 'Happy Clients', value: '300+' },
-      { label: 'Team Members', value: '50+' },
-    ],
+    managingDirector: 'Ram Kumar Shrestha'
   },
   contact: {
-    phone: '977-01-5907561',
-    email: 'rass.engineering2016@gmail.com',
-    address: 'Kathmandu, Nepal',
-    mapUrl: 'https://maps.google.com',
-    workingHours: 'Sun - Fri: 10:00 AM - 6:00 PM',
-    socialLinks: {
-      facebook: 'https://facebook.com/rassengineering',
-      linkedin: 'https://linkedin.com/company/rassengineering',
-    },
+    phone: '',
+    email: '',
+    address: '',
+    mapUrl: '',
+    workingHours: '',
+    socialLinks: {}
   },
   settings: {
     siteName: 'RASS Engineering & Construction',
@@ -169,38 +100,28 @@ const initialState: AdminState = {
     logo: '',
     favicon: '',
     seoTitle: 'RASS Engineering | Construction & Engineering Experts',
-    seoDescription: 'Professional construction and specialized engineering solutions with 31+ years of expertise.',
+    seoDescription: 'Professional construction and specialized engineering solutions'
   },
-  quoteSubmissions: [
-    {
-      id: '1',
-      name: 'John Doe',
-      company: 'ABC Corp',
-      email: 'john@abc.com',
-      phone: '9841234567',
-      serviceType: 'Waterproofing',
-      message: 'Need waterproofing for our new office building.',
-      createdAt: '2024-01-20',
-      status: 'new',
-    },
-  ],
-  contactSubmissions: [
-    {
-      id: '1',
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      phone: '9841234568',
-      message: 'Interested in your services for a residential project.',
-      createdAt: '2024-01-22',
-      status: 'new',
-    },
-  ],
+  quoteSubmissions: [],
+  contactSubmissions: []
 };
 
+// Reducer
 function adminReducer(state: AdminState, action: AdminAction): AdminState {
+  const payload = action.payload as any;
+  
   switch (action.type) {
     case 'SET_HERO':
-      return { ...state, hero: action.payload };
+      return { ...state, hero: { ...state.hero, ...payload } };
+
+    case 'SET_ABOUT':
+      return { ...state, about: { ...state.about, ...payload } };
+
+    case 'SET_CONTACT':
+      return { ...state, contact: { ...state.contact, ...payload } };
+
+    case 'SET_SERVICES':
+      return { ...state, services: payload };
 
     case 'ADD_SERVICE':
       return { ...state, services: [...state.services, action.payload] };
@@ -209,7 +130,7 @@ function adminReducer(state: AdminState, action: AdminAction): AdminState {
       return {
         ...state,
         services: state.services.map((s) =>
-          s.id === action.payload.id ? action.payload : s
+          s.id === payload.id ? payload : s
         ),
       };
 
@@ -226,7 +147,7 @@ function adminReducer(state: AdminState, action: AdminAction): AdminState {
       return {
         ...state,
         projects: state.projects.map((p) =>
-          p.id === action.payload.id ? action.payload : p
+          p.id === payload.id ? payload : p
         ),
       };
 
@@ -243,7 +164,7 @@ function adminReducer(state: AdminState, action: AdminAction): AdminState {
       return {
         ...state,
         blog: state.blog.map((b) =>
-          b.id === action.payload.id ? action.payload : b
+          b.id === payload.id ? payload : b
         ),
       };
 
@@ -253,20 +174,14 @@ function adminReducer(state: AdminState, action: AdminAction): AdminState {
         blog: state.blog.filter((b) => b.id !== action.payload),
       };
 
-    case 'SET_ABOUT':
-      return { ...state, about: action.payload };
-
-    case 'SET_CONTACT':
-      return { ...state, contact: action.payload };
-
     case 'SET_SETTINGS':
-      return { ...state, settings: action.payload };
+      return { ...state, settings: payload };
 
     case 'UPDATE_QUOTE_STATUS':
       return {
         ...state,
         quoteSubmissions: state.quoteSubmissions.map((q) =>
-          q.id === action.payload.id ? { ...q, status: action.payload.status } : q
+          q.id === payload.id ? { ...q, status: payload.status } : q
         ),
       };
 
@@ -274,12 +189,12 @@ function adminReducer(state: AdminState, action: AdminAction): AdminState {
       return {
         ...state,
         contactSubmissions: state.contactSubmissions.map((c) =>
-          c.id === action.payload.id ? { ...c, status: action.payload.status } : c
+          c.id === payload.id ? { ...c, status: payload.status } : c
         ),
       };
 
     case 'LOAD_STATE':
-      return action.payload;
+      return payload;
 
     default:
       return state;
@@ -289,91 +204,387 @@ function adminReducer(state: AdminState, action: AdminAction): AdminState {
 interface AdminContextType {
   state: AdminState;
   dispatch: React.Dispatch<AdminAction>;
-  // Helper functions for API integration later
-  saveToStorage: () => void;
-  loadFromStorage: () => void;
-  // Auth functions
   isAuthenticated: boolean;
   adminUser: AdminUser | null;
-  login: (user: AdminUser) => void;
-  logout: () => void;
+  isLoading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  loadHomepageData: () => Promise<void>;
+  saveHeroSection: (heroData: any) => Promise<void>;
+  saveAboutSection: (aboutData: any) => Promise<void>;
+  saveServices: (services: any[]) => Promise<void>;
+  saveContactCTA: (contactData: any) => Promise<void>;
+  uploadImages: (files: File[], type: 'hero' | 'about' | 'general') => Promise<any[]>;
+  deleteImage: (imageUrl: string) => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
-
-const STORAGE_KEY = 'rass_admin_data';
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(adminReducer, initialState);
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load auth state on mount
   useEffect(() => {
-    loadFromStorage();
     loadAuthState();
   }, []);
 
-  // Save to localStorage whenever state changes
   useEffect(() => {
-    saveToStorage();
-  }, [state]);
-
-  const saveToStorage = () => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-      console.error('Failed to save admin state:', error);
+    if (isAuthenticated) {
+      loadHomepageData();
     }
-  };
-
-  const loadFromStorage = () => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        dispatch({ type: 'LOAD_STATE', payload: parsed });
-      }
-    } catch (error) {
-      console.error('Failed to load admin state:', error);
-    }
-  };
+  }, [isAuthenticated]);
 
   const loadAuthState = () => {
     try {
       const savedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (savedAuth) {
+      const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+      
+      if (savedAuth && token) {
         const parsed = JSON.parse(savedAuth);
         setAdminUser(parsed);
         setIsAuthenticated(true);
       }
     } catch (error) {
       console.error('Failed to load auth state:', error);
+      clearAuthData();
     }
   };
 
-  const login = (user: AdminUser) => {
-    setAdminUser(user);
-    setIsAuthenticated(true);
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiClient.post('/auth/login', { email, password });
+      
+      if (response.data.success) {
+        const { token, user } = response.data.data;
+        
+        setAdminUser(user);
+        setIsAuthenticated(true);
+        
+        localStorage.setItem(TOKEN_STORAGE_KEY, token);
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+        
+        await loadHomepageData();
+      } else {
+        throw new Error(response.data.message || 'Login failed');
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message || 'Login failed';
+      setError(errorMsg);
+      console.error('Login error:', error);
+      clearAuthData();
+      throw new Error(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const logout = () => {
-    setAdminUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+  const logout = async () => {
+    setIsLoading(true);
+    
+    try {
+      await apiClient.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setAdminUser(null);
+      setIsAuthenticated(false);
+      clearAuthData();
+      setIsLoading(false);
+      window.location.href = '/admin/login';
+    }
+  };
+
+  const loadHomepageData = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiClient.get('/admin/home');
+      
+      if (response.data.success) {
+        const data = response.data.data;
+        
+        // Update hero section
+        if (data.hero) {
+          dispatch({
+            type: 'SET_HERO',
+            payload: {
+              title: data.hero.title || '',
+              titleHighlight: data.hero.titleHighlight || '',
+              subtitle: data.hero.subtitle || '',
+              images: data.hero.images || [],
+              buttons: data.hero.buttons || []
+            }
+          });
+        }
+
+        // Update services
+        if (data.services) {
+          dispatch({
+            type: 'SET_SERVICES',
+            payload: data.services
+          });
+        }
+
+        // Update about section
+        if (data.about) {
+          const managingDirector = typeof data.about.managingDirector === 'object' 
+            ? data.about.managingDirector.name || data.about.managingDirector
+            : data.about.managingDirector;
+            
+          dispatch({
+            type: 'SET_ABOUT',
+            payload: {
+              subtitle: data.about.subtitle || '',
+              title: data.about.title || '',
+              description1: data.about.description1 || '',
+              description2: data.about.description2 || '',
+              image: data.about.image || '',
+              managingDirector: managingDirector || ''
+            }
+          });
+        }
+
+        // Update contact CTA
+        if (data.contactCTA) {
+          dispatch({
+            type: 'SET_CONTACT',
+            payload: {
+              heading: data.contactCTA.heading || '',
+              subheading: data.contactCTA.subheading || '',
+              phone: data.contactCTA.phone || '',
+              email: data.contactCTA.email || ''
+            }
+          });
+        }
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to load homepage data';
+      setError(errorMsg);
+      console.error('Failed to load homepage data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveHeroSection = async (heroData: any) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiClient.put('/admin/home/hero', {
+        title: heroData.title,
+        titleHighlight: heroData.titleHighlight,
+        subtitle: heroData.subtitle,
+        images: heroData.images,
+        buttons: heroData.buttons
+      });
+      
+      if (response.data.success) {
+        dispatch({
+          type: 'SET_HERO',
+          payload: heroData
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to save hero section');
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to save hero section';
+      setError(errorMsg);
+      console.error('Save hero error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveAboutSection = async (aboutData: any) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiClient.put('/admin/home/about', {
+        subtitle: aboutData.subtitle,
+        title: aboutData.title,
+        description1: aboutData.description1,
+        description2: aboutData.description2,
+        image: aboutData.image,
+        managingDirector: aboutData.managingDirector
+      });
+      
+      if (response.data.success) {
+        dispatch({
+          type: 'SET_ABOUT',
+          payload: aboutData
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to save about section');
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to save about section';
+      setError(errorMsg);
+      console.error('Save about error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveServices = async (services: any[]) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiClient.put('/admin/home/services', { services });
+      
+      if (response.data.success) {
+        dispatch({
+          type: 'SET_SERVICES',
+          payload: services
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to save services');
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to save services';
+      setError(errorMsg);
+      console.error('Save services error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveContactCTA = async (contactData: any) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiClient.put('/admin/home/contact-cta', {
+        heading: contactData.heading,
+        subheading: contactData.subheading,
+        phone: contactData.phone,
+        email: contactData.email
+      });
+      
+      if (response.data.success) {
+        dispatch({
+          type: 'SET_CONTACT',
+          payload: contactData
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to save contact CTA');
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to save contact CTA';
+      setError(errorMsg);
+      console.error('Save contact CTA error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const uploadImages = async (files: File[], type: 'hero' | 'about' | 'general' = 'general') => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const formData = new FormData();
+      
+      // FIXED: Use correct field name based on endpoint
+      if (type === 'about') {
+        // Single file for about-image endpoint
+        formData.append('file', files[0]);
+      } else {
+        // Multiple files for hero-images endpoint
+        files.forEach(file => {
+          formData.append('files', file);
+        });
+      }
+
+      let endpoint = '/upload/images';
+      if (type === 'hero') endpoint = '/upload/hero-images';
+      if (type === 'about') endpoint = '/upload/about-image';
+
+      const response = await apiClient.post(endpoint, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 60000, // 60 seconds for image upload
+      });
+      
+      if (response.data.success) {
+        // For about image, return as array for consistency
+        if (type === 'about' && !Array.isArray(response.data.data)) {
+          return [response.data.data];
+        }
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to upload images');
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to upload images';
+      setError(errorMsg);
+      console.error('Upload images error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteImage = async (imageUrl: string) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiClient.delete('/upload/image', {
+        data: { imageUrl }
+      });
+      
+      if (response.data.success) {
+        return response.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to delete image');
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to delete image';
+      setError(errorMsg);
+      console.error('Delete image error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <AdminContext.Provider value={{ 
       state, 
-      dispatch, 
-      saveToStorage, 
-      loadFromStorage,
+      dispatch,
       isAuthenticated,
       adminUser,
+      isLoading,
+      error,
       login,
-      logout 
+      logout,
+      loadHomepageData,
+      saveHeroSection,
+      saveAboutSection,
+      saveServices,
+      saveContactCTA,
+      uploadImages,
+      deleteImage
     }}>
       {children}
     </AdminContext.Provider>
@@ -387,18 +598,3 @@ export function useAdmin() {
   }
   return context;
 }
-
-// API integration hooks - Replace localStorage calls with API calls
-// Example:
-// export async function fetchAdminData(): Promise<AdminState> {
-//   const response = await fetch('/api/admin/data');
-//   return response.json();
-// }
-// 
-// export async function saveAdminData(data: Partial<AdminState>): Promise<void> {
-//   await fetch('/api/admin/data', {
-//     method: 'PUT',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify(data),
-//   });
-// }
