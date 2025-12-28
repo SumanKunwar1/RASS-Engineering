@@ -1,90 +1,51 @@
-import React, { useState } from 'react';
-import { useAdmin } from '@/contexts/AdminContext';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { FormModal } from '@/components/admin/FormModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { AboutContent, CompanyValue, TeamMember } from '@/types/admin';
 import { toast } from 'sonner';
-import { Pencil, Plus, Trash2, Eye, Target } from 'lucide-react';
+import { Pencil, Plus, Trash2, Eye, Target, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-// Image Upload Utility
-const handleImageUpload = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      resolve(e.target?.result as string);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-};
-
-// Stat Item Interface (matching admin.ts stats structure)
-interface StatItem {
-  label: string;
-  value: string;
-}
-
-// Helper function to convert AboutSection to AboutContent
-const ensureAboutContent = (data: any): AboutContent => {
-  // If it's already AboutContent with required fields
-  if (data && 'heroTitle' in data && 'mission' in data) {
-    return data as AboutContent;
-  }
-  
-  // If it's AboutSection, convert it
-  if (data && 'title' in data && 'subtitle' in data) {
-    return {
-      heroTitle: data.title || 'About Us',
-      heroSubtitle: data.subtitle || '',
-      mission: data.description1 || '',
-      vision: data.description2 || '',
-      history: '',
-      values: [],
-      team: [],
-      stats: []
-    };
-  }
-  
-  // Default fallback
-  return {
-    heroTitle: 'About RASS Engineering',
-    heroSubtitle: "Building Nepal's infrastructure with precision",
-    mission: '',
-    vision: '',
-    history: '',
-    values: [],
-    team: [],
-    stats: []
-  };
-};
+import {
+  getAboutContent,
+  updateMainContent,
+  updateStory,
+  saveTeamMember,
+  deleteTeamMember as deleteTeamMemberApi,
+  saveCompanyValue,
+  deleteCompanyValue as deleteCompanyValueApi,
+  addStat,
+  deleteStat as deleteStatApi,
+  AboutContent,
+  TeamMember,
+  CompanyValue,
+  StatItem
+} from '@/services/aboutApi';
+import { useImageUpload } from '@/hooks/useAboutImageupload';
 
 export default function AdminAbout() {
-  const { state, dispatch } = useAdmin();
-  
-  // Safely get about data and ensure it's AboutContent type
-  const aboutData: AboutContent = ensureAboutContent(state.about);
+  const [aboutData, setAboutData] = useState<AboutContent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { uploadSingleImage, isUploading } = useImageUpload();
   
   // Main content editing
   const [isEditingMain, setIsEditingMain] = useState(false);
   const [mainData, setMainData] = useState({
-    heroTitle: aboutData.heroTitle || '',
-    heroSubtitle: aboutData.heroSubtitle || '',
-    mission: aboutData.mission || '',
-    vision: aboutData.vision || ''
+    heroTitle: '',
+    heroSubtitle: '',
+    mission: '',
+    vision: ''
   });
   
   // Story/History section editing
   const [isEditingStory, setIsEditingStory] = useState(false);
   const [storyData, setStoryData] = useState({
-    history: aboutData.history || '',
-    storyImage: (aboutData as any).storyImage || '',
-    storyTitle: (aboutData as any).storyTitle || 'Our Story'
+    history: '',
+    storyImage: '',
+    storyTitle: 'Our Story'
   });
   
   // Team member editing
@@ -94,37 +55,54 @@ export default function AdminAbout() {
   const [editingValue, setEditingValue] = useState<CompanyValue | null>(null);
   
   // Stats editing
-  const [isEditingStats, setIsEditingStats] = useState(false);
-  const [statsData, setStatsData] = useState<StatItem[]>(aboutData.stats || []);
   const [editingStat, setEditingStat] = useState<StatItem | null>(null);
 
+  useEffect(() => {
+    fetchAboutData();
+  }, []);
+
+  const fetchAboutData = async () => {
+    try {
+      const response = await getAboutContent();
+      if (response.success) {
+        setAboutData(response.data);
+      }
+    } catch (error: any) {
+      toast.error('Failed to load about content');
+      console.error('Fetch about error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Save main content (Hero, Mission, Vision)
-  const handleSaveMain = (e: React.FormEvent) => {
+  const handleSaveMain = async (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedAbout: AboutContent = {
-      ...aboutData,
-      heroTitle: mainData.heroTitle,
-      heroSubtitle: mainData.heroSubtitle,
-      mission: mainData.mission,
-      vision: mainData.vision
-    };
-    dispatch({ type: 'SET_ABOUT', payload: updatedAbout as any });
-    setIsEditingMain(false);
-    toast.success('About page content updated successfully!');
+    try {
+      const response = await updateMainContent(mainData);
+      if (response.success) {
+        setAboutData(response.data);
+        setIsEditingMain(false);
+        toast.success('About page content updated successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update content');
+    }
   };
 
   // Save story section
-  const handleSaveStory = (e: React.FormEvent) => {
+  const handleSaveStory = async (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedAbout: any = {
-      ...aboutData,
-      history: storyData.history,
-      storyImage: storyData.storyImage,
-      storyTitle: storyData.storyTitle
-    };
-    dispatch({ type: 'SET_ABOUT', payload: updatedAbout });
-    setIsEditingStory(false);
-    toast.success('Story section updated successfully!');
+    try {
+      const response = await updateStory(storyData);
+      if (response.success) {
+        setAboutData(response.data);
+        setIsEditingStory(false);
+        toast.success('Story section updated successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update story');
+    }
   };
 
   // Handle story image upload
@@ -132,8 +110,8 @@ export default function AdminAbout() {
     const file = e.target.files?.[0];
     if (file) {
       try {
-        const base64 = await handleImageUpload(file);
-        setStoryData({ ...storyData, storyImage: base64 });
+        const result = await uploadSingleImage(file, 'rass-engineering/about');
+        setStoryData({ ...storyData, storyImage: result.url });
         toast.success('Image uploaded successfully!');
       } catch (error) {
         toast.error('Failed to upload image');
@@ -157,8 +135,8 @@ export default function AdminAbout() {
     const file = e.target.files?.[0];
     if (file && editingTeamMember) {
       try {
-        const base64 = await handleImageUpload(file);
-        setEditingTeamMember({ ...editingTeamMember, image: base64 });
+        const result = await uploadSingleImage(file, 'rass-engineering/team');
+        setEditingTeamMember({ ...editingTeamMember, image: result.url });
         toast.success('Image uploaded successfully!');
       } catch (error) {
         toast.error('Failed to upload image');
@@ -166,33 +144,32 @@ export default function AdminAbout() {
     }
   };
 
-  const handleSaveTeamMember = (e: React.FormEvent) => {
+  const handleSaveTeamMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTeamMember) return;
 
-    const currentTeam = aboutData.team || [];
-    const exists = currentTeam.find((t) => t.id === editingTeamMember.id);
-    const newTeam = exists
-      ? currentTeam.map((t) => (t.id === editingTeamMember.id ? editingTeamMember : t))
-      : [...currentTeam, editingTeamMember];
-
-    const updatedAbout: AboutContent = {
-      ...aboutData,
-      team: newTeam
-    };
-    dispatch({ type: 'SET_ABOUT', payload: updatedAbout as any });
-    setEditingTeamMember(null);
-    toast.success('Team member saved successfully!');
+    try {
+      const response = await saveTeamMember(editingTeamMember);
+      if (response.success) {
+        setAboutData(response.data);
+        setEditingTeamMember(null);
+        toast.success('Team member saved successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to save team member');
+    }
   };
 
-  const handleDeleteTeamMember = (id: string) => {
-    const currentTeam = aboutData.team || [];
-    const updatedAbout: AboutContent = {
-      ...aboutData,
-      team: currentTeam.filter((t) => t.id !== id)
-    };
-    dispatch({ type: 'SET_ABOUT', payload: updatedAbout as any });
-    toast.success('Team member deleted successfully!');
+  const handleDeleteTeamMember = async (id: string) => {
+    try {
+      const response = await deleteTeamMemberApi(id);
+      if (response.success) {
+        setAboutData(response.data);
+        toast.success('Team member deleted successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete team member');
+    }
   };
 
   // Company Values CRUD
@@ -206,33 +183,32 @@ export default function AdminAbout() {
     setEditingValue(newValue);
   };
 
-  const handleSaveValue = (e: React.FormEvent) => {
+  const handleSaveValue = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingValue) return;
 
-    const currentValues = aboutData.values || [];
-    const exists = currentValues.find((v) => v.id === editingValue.id);
-    const newValues = exists
-      ? currentValues.map((v) => (v.id === editingValue.id ? editingValue : v))
-      : [...currentValues, editingValue];
-
-    const updatedAbout: AboutContent = {
-      ...aboutData,
-      values: newValues
-    };
-    dispatch({ type: 'SET_ABOUT', payload: updatedAbout as any });
-    setEditingValue(null);
-    toast.success('Company value saved successfully!');
+    try {
+      const response = await saveCompanyValue(editingValue);
+      if (response.success) {
+        setAboutData(response.data);
+        setEditingValue(null);
+        toast.success('Company value saved successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to save company value');
+    }
   };
 
-  const handleDeleteValue = (id: string) => {
-    const currentValues = aboutData.values || [];
-    const updatedAbout: AboutContent = {
-      ...aboutData,
-      values: currentValues.filter((v) => v.id !== id)
-    };
-    dispatch({ type: 'SET_ABOUT', payload: updatedAbout as any });
-    toast.success('Company value deleted successfully!');
+  const handleDeleteValue = async (id: string) => {
+    try {
+      const response = await deleteCompanyValueApi(id);
+      if (response.success) {
+        setAboutData(response.data);
+        toast.success('Company value deleted successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete company value');
+    }
   };
 
   // Stats CRUD
@@ -244,33 +220,49 @@ export default function AdminAbout() {
     setEditingStat(newStat);
   };
 
-  const handleSaveStat = (e: React.FormEvent) => {
+  const handleSaveStat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStat) return;
 
-    const currentStats = aboutData.stats || [];
-    const newStats = [...currentStats, editingStat];
-
-    setStatsData(newStats);
-    const updatedAbout: AboutContent = {
-      ...aboutData,
-      stats: newStats
-    };
-    dispatch({ type: 'SET_ABOUT', payload: updatedAbout as any });
-    setEditingStat(null);
-    toast.success('Stat saved successfully!');
+    try {
+      const response = await addStat(editingStat);
+      if (response.success) {
+        setAboutData(response.data);
+        setEditingStat(null);
+        toast.success('Stat saved successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to add stat');
+    }
   };
 
-  const handleDeleteStat = (index: number) => {
-    const newStats = statsData.filter((_, i) => i !== index);
-    setStatsData(newStats);
-    const updatedAbout: AboutContent = {
-      ...aboutData,
-      stats: newStats
-    };
-    dispatch({ type: 'SET_ABOUT', payload: updatedAbout as any });
-    toast.success('Stat deleted successfully!');
+  const handleDeleteStat = async (index: number) => {
+    try {
+      const response = await deleteStatApi(index);
+      if (response.success) {
+        setAboutData(response.data);
+        toast.success('Stat deleted successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete stat');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
+      </div>
+    );
+  }
+
+  if (!aboutData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Failed to load about content</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -358,7 +350,7 @@ export default function AdminAbout() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {statsData.map((stat, index) => (
+                {aboutData.stats.map((stat, index) => (
                   <Card key={index}>
                     <CardContent className="p-4 text-center relative">
                       <Button
@@ -391,9 +383,9 @@ export default function AdminAbout() {
               </div>
               <Button onClick={() => {
                 setStoryData({
-                  storyTitle: (aboutData as any).storyTitle || 'Our Story',
+                  storyTitle: aboutData.storyTitle || 'Our Story',
                   history: aboutData.history,
-                  storyImage: (aboutData as any).storyImage || ''
+                  storyImage: aboutData.storyImage || ''
                 });
                 setIsEditingStory(true);
               }}>
@@ -403,15 +395,15 @@ export default function AdminAbout() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {(aboutData as any).storyImage && (
+                {aboutData.storyImage && (
                   <img
-                    src={(aboutData as any).storyImage}
+                    src={aboutData.storyImage}
                     alt="Company Story"
                     className="w-full h-64 object-cover rounded-lg"
                   />
                 )}
                 <div>
-                  <h4 className="font-semibold mb-2">{(aboutData as any).storyTitle || 'Our Story'}</h4>
+                  <h4 className="font-semibold mb-2">{aboutData.storyTitle || 'Our Story'}</h4>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{aboutData.history}</p>
                 </div>
               </div>
@@ -436,7 +428,7 @@ export default function AdminAbout() {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {(aboutData.team || []).map((member) => (
+                {aboutData.team.map((member) => (
                   <Card key={member.id}>
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
@@ -507,7 +499,7 @@ export default function AdminAbout() {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
-                {(aboutData.values || []).map((value) => (
+                {aboutData.values.map((value) => (
                   <Card key={value.id}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-3">
@@ -627,6 +619,7 @@ export default function AdminAbout() {
                 type="file"
                 accept="image/*"
                 onChange={handleStoryImageUpload}
+                disabled={isUploading}
                 className="flex-1"
               />
               {storyData.storyImage && (
@@ -658,6 +651,7 @@ export default function AdminAbout() {
                   type="file"
                   accept="image/*"
                   onChange={handleTeamMemberImageUpload}
+                  disabled={isUploading}
                   className="flex-1"
                 />
                 {editingTeamMember.image && (
@@ -709,7 +703,7 @@ export default function AdminAbout() {
               <Label htmlFor="memberBio">Bio</Label>
               <Textarea
                 id="memberBio"
-                value={editingTeamMember.bio}
+                value={editingTeamMember.bio || ''}
                 onChange={(e) =>
                   setEditingTeamMember({ ...editingTeamMember, bio: e.target.value })
                 }

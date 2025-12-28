@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Target, Eye, Award, Users, Heart, Star, Shield, Zap } from 'lucide-react';
+import { Target, Eye, Award, Users, Heart, Star, Shield, Zap, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
-import { useAdmin } from '../contexts/AdminContext';
-import * as LucideIcons from 'lucide-react';
+import { getAboutContent, AboutContent } from '../services/aboutApi';
+import { toast } from 'sonner';
 
 // Helper to get icon component by name
 const getIconComponent = (iconName: string) => {
@@ -24,10 +24,36 @@ const getIconComponent = (iconName: string) => {
 };
 
 const About: React.FC = () => {
-  const { state } = useAdmin();
-  const aboutData = state.aboutContent || state.about;
+  const [aboutData, setAboutData] = useState<AboutContent | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Default values if admin data is not set
+  useEffect(() => {
+    fetchAboutData();
+  }, []);
+
+  const fetchAboutData = async () => {
+    try {
+      const response = await getAboutContent();
+      if (response.success) {
+        setAboutData(response.data);
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch about data:', error);
+      toast.error('Failed to load about content');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#F46A1F]" />
+      </div>
+    );
+  }
+
+  // Default values if data is not available
   const heroTitle = aboutData?.heroTitle || 'About RASS Engineering';
   const heroSubtitle = aboutData?.heroSubtitle || "Building Nepal's infrastructure with precision, dedication, and engineering excellence since 2050 B.S.";
   const mission = aboutData?.mission || 'To deliver world-class engineering and construction solutions that exceed client expectations while maintaining the highest standards of safety, quality, and environmental responsibility.';
@@ -35,9 +61,6 @@ const About: React.FC = () => {
   const storyTitle = aboutData?.storyTitle || 'Our Story';
   const history = aboutData?.history || 'Founded in 2050 B.S., RASS Engineering & Construction Pvt. Ltd. has been a pioneer in specialized construction solutions across Nepal.';
   const storyImage = aboutData?.storyImage || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80';
-  const foundedYear = aboutData?.foundedYear || '2050 B.S.';
-  const experience = aboutData?.experience || '31+';
-  const completedProjects = aboutData?.completedProjects || '500+';
   const directorName = aboutData?.directorName || 'Rabi Kumar Paudel';
   const directorPosition = aboutData?.directorPosition || 'Managing Director';
   const directorExperience = aboutData?.directorExperience || 'Director from 2050 B.S. to 2073 B.S., Managing Director since 2073 B.S.';
@@ -71,8 +94,8 @@ const About: React.FC = () => {
   ];
 
   const stats = aboutData?.stats || [
-    { id: '1', value: experience, label: 'Years of Experience' },
-    { id: '2', value: completedProjects, label: 'Completed Projects' }
+    { value: '31+', label: 'Years of Experience' },
+    { value: '500+', label: 'Completed Projects' }
   ];
 
   const team = aboutData?.team || [];
@@ -153,7 +176,7 @@ const About: React.FC = () => {
 
                 <div className="mt-8 grid grid-cols-2 gap-6">
                   {stats.map((stat, idx) => (
-                    <div key={stat.id || idx} className="bg-[#F4F4F4] p-6 rounded-xl">
+                    <div key={idx} className="bg-[#F4F4F4] p-6 rounded-xl">
                       <div className="text-3xl font-bold text-[#F46A1F] mb-2">{stat.value}</div>
                       <div className="text-gray-600">{stat.label}</div>
                     </div>

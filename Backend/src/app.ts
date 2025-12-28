@@ -78,6 +78,7 @@ app.use('/api/contacts', contactRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/about', aboutRoutes);
 
+
 // 404 Handler
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({
