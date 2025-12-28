@@ -40,6 +40,22 @@ const apiClient: AxiosInstance = axios.create({
 const clearAuthData = () => {
   localStorage.removeItem(AUTH_STORAGE_KEY);
   localStorage.removeItem(TOKEN_STORAGE_KEY);
+  localStorage.removeItem('rass_admin_token_expiry');
+};
+
+// Store token with expiry timestamp
+const storeToken = (token: string) => {
+  localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  // Store expiry time (1 day from now in milliseconds)
+  const expiryTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+  localStorage.setItem('rass_admin_token_expiry', expiryTime.toString());
+};
+
+// Check if token is expired
+const isTokenExpired = (): boolean => {
+  const expiryTime = localStorage.getItem('rass_admin_token_expiry');
+  if (!expiryTime) return true;
+  return new Date().getTime() > parseInt(expiryTime);
 };
 
 // Add token to requests
@@ -55,9 +71,17 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
+    // Handle 401 Unauthorized - token expired or invalid
     if (error.response?.status === 401) {
       clearAuthData();
-      window.location.href = '/admin/login';
+      // Only redirect if not already on login page
+      if (!window.location.pathname.includes('/admin/login')) {
+        window.location.href = '/admin/login';
+      }
+    }
+    // Handle 403 Forbidden - insufficient permissions
+    if (error.response?.status === 403) {
+      console.error('Access denied: Insufficient permissions');
     }
     return Promise.reject(error);
   }
@@ -244,6 +268,13 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       const token = localStorage.getItem(TOKEN_STORAGE_KEY);
       
       if (savedAuth && token) {
+        // Check if token is expired
+        if (isTokenExpired()) {
+          clearAuthData();
+          setIsAuthenticated(false);
+          return;
+        }
+        
         const parsed = JSON.parse(savedAuth);
         setAdminUser(parsed);
         setIsAuthenticated(true);
@@ -267,7 +298,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         setAdminUser(user);
         setIsAuthenticated(true);
         
-        localStorage.setItem(TOKEN_STORAGE_KEY, token);
+        // Use storeToken to save token with expiry
+        storeToken(token);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
         
         await loadHomepageData();
