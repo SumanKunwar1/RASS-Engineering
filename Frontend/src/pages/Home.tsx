@@ -399,7 +399,7 @@ const Home: React.FC = () => {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.length > 0 ? (
-                services.slice(0, 6).map((service, index) => {
+                services.slice(0, 12).map((service, index) => {
                   const IconComponent = (Icons[service.icon as keyof typeof Icons] || Icons.Wrench) as React.ComponentType<{ className?: string; size?: number }>;
                   return (
                     <motion.div
@@ -431,7 +431,7 @@ const Home: React.FC = () => {
                   );
                 })
               ) : (
-                servicesData.slice(0, 6).map((service, index) => {
+                servicesData.slice(0, 12).map((service, index) => {
                   const IconComponent = Icons[service.icon as keyof typeof Icons] as React.ComponentType<{ className?: string; size?: number }>;
                   return (
                     <motion.div
