@@ -2,20 +2,108 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { ArrowRight, Phone, Mail, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Phone, Mail, CheckCircle2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { servicesData, whyChooseUsData, companyInfo } from '../data/mockData';
+import { homeAPI } from '../services/api.service';
+import { toast } from 'sonner';
+
+interface HeroSection {
+  title: string;
+  titleHighlight: string;
+  subtitle: string;
+  primaryButtonText: string;
+  primaryButtonLink: string;
+  secondaryButtonText: string;
+  secondaryButtonLink: string;
+  images: string[];
+  buttons: Array<{
+    id: string;
+    label: string;
+    route: string;
+    variant?: 'primary' | 'outline';
+  }>;
+}
+
+interface AboutSection {
+  subtitle: string;
+  title: string;
+  description1: string;
+  description2: string;
+  image: string;
+  managingDirector: string;
+}
+
+interface Service {
+  _id: string;
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  active: boolean;
+}
+
+interface ContactCTA {
+  title: string;
+  subtitle: string;
+  buttonText: string;
+}
 
 const Home: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
+  const [aboutSection, setAboutSection] = useState<AboutSection | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [contactCTA, setContactCTA] = useState<ContactCTA | null>(null);
 
-  const heroBannerImages = [
-    "https://res.cloudinary.com/dihev9qxc/image/upload/v1766306898/WhatsApp_Image_2025-12-21_at_14.10.49_itbaq8.jpg",
-    "https://res.cloudinary.com/dihev9qxc/image/upload/v1766306898/WhatsApp_Image_2025-12-21_at_14.10.50_ihyboi.jpg",
-    "https://res.cloudinary.com/dihev9qxc/image/upload/v1766306898/WhatsApp_Image_2025-12-21_at_14.10.50_1_ifq2a2.jpg"
-  ];
+  // Get images from hero section (NO hardcoded fallback)
+  const heroBannerImages = heroSection?.images || [];
+
+  useEffect(() => {
+    fetchHomeContent();
+  }, []);
+
+  const fetchHomeContent = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all home page content
+      const response = await homeAPI.getHomepageContent();
+
+      if (response.success && response.data) {
+        const data = response.data;
+        
+        // Set hero section
+        if (data.hero) {
+          setHeroSection(data.hero);
+        }
+        
+        // Set about section
+        if (data.about) {
+          setAboutSection(data.about);
+        }
+        
+        // Set services (filter active ones)
+        if (data.services) {
+          setServices(data.services.filter((s: Service) => s.active !== false));
+        }
+        
+        // Set contact CTA
+        if (data.contact) {
+          setContactCTA(data.contact);
+        }
+      }
+
+    } catch (error: any) {
+      console.error('Failed to fetch home content:', error);
+      toast.error('Failed to load page content');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Auto-scroll carousel every 5 seconds
   useEffect(() => {
@@ -36,6 +124,14 @@ const Home: React.FC = () => {
   const goToImage = (index: number) => {
     setCurrentImageIndex(index);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#F46A1F]" />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -73,29 +169,47 @@ const Home: React.FC = () => {
                 </div>
 
                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-black leading-tight mb-6">
-                  32+ Years of
-                  <span className="block text-[#F46A1F]">Engineering Excellence</span>
+                  {heroSection?.title || '32+ Years of'}
+                  <span className="block text-[#F46A1F]">{heroSection?.titleHighlight || 'Engineering Excellence'}</span>
                 </h1>
 
-                <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                  Specialized Construction Solutions & Engineering Services
+                <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+                  {heroSection?.subtitle || 'Specialized Construction Solutions & Engineering Services'}
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link to="/services">
-                    <Button className="bg-[#F46A1F] hover:bg-[#d85a15] text-white px-8 py-6 text-lg transition-all hover:scale-105">
-                      View Services
-                      <ArrowRight className="ml-2" size={20} />
-                    </Button>
-                  </Link>
-                  <Link to="/request-quote">
-                    <Button variant="outline" className="border-2 border-black text-black px-8 py-6 text-lg hover:bg-black hover:text-white transition-all">
-                      Request Consultation
-                    </Button>
-                  </Link>
+                  {heroSection?.buttons && heroSection.buttons.length > 0 ? (
+                    heroSection.buttons.map((button) => (
+                      <Link key={button.id} to={button.route}>
+                        <Button 
+                          className={button.variant === 'outline' 
+                            ? 'border-2 border-black text-black px-8 py-6 text-lg hover:bg-black hover:text-white transition-all' 
+                            : 'bg-[#F46A1F] hover:bg-[#d85a15] text-white px-8 py-6 text-lg transition-all hover:scale-105'
+                          }
+                        >
+                          {button.label}
+                          <ArrowRight className="ml-2" size={20} />
+                        </Button>
+                      </Link>
+                    ))
+                  ) : (
+                    <>
+                      <Link to="/services">
+                        <Button className="bg-[#F46A1F] hover:bg-[#d85a15] text-white px-8 py-6 text-lg transition-all hover:scale-105">
+                          View Services
+                          <ArrowRight className="ml-2" size={20} />
+                        </Button>
+                      </Link>
+                      <Link to="/request-quote">
+                        <Button variant="outline" className="border-2 border-black text-black px-8 py-6 text-lg hover:bg-black hover:text-white transition-all">
+                          Request Consultation
+                        </Button>
+                      </Link>
+                    </>
+                  )}
                 </div>
 
-                {/* Quick Stats */}
+                {/* Quick Stats - Static */}
                 <div className="grid grid-cols-3 gap-6 mt-12">
                   <div>
                     <div className="text-3xl font-bold text-[#F46A1F]">32+</div>
@@ -119,71 +233,83 @@ const Home: React.FC = () => {
                 transition={{ duration: 0.7, delay: 0.2 }}
                 className="relative"
               >
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl group">
-                  {/* Image Container with fade transition */}
-                  <div className="relative h-[500px] overflow-hidden">
-                    {heroBannerImages.map((image, index) => (
-                      <motion.img
-                        key={index}
-                        src={image}
-                        alt={`Construction Banner ${index + 1}`}
-                        className="absolute w-full h-full object-cover"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: index === currentImageIndex ? 1 : 0 }}
-                        transition={{ duration: 0.5 }}
-                      />
-                    ))}
-                  </div>
+                {heroBannerImages.length > 0 ? (
+                  <div className="relative rounded-2xl overflow-hidden shadow-2xl group">
+                    {/* Image Container with fade transition */}
+                    <div className="relative h-[500px] overflow-hidden">
+                      {heroBannerImages.map((image, index) => (
+                        <motion.img
+                          key={index}
+                          src={image}
+                          alt={`Construction Banner ${index + 1}`}
+                          className="absolute w-full h-full object-cover"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: index === currentImageIndex ? 1 : 0 }}
+                          transition={{ duration: 0.5 }}
+                        />
+                      ))}
+                    </div>
 
-                  {/* Previous Button */}
-                  <button
-                    onClick={goToPreviousImage}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-black p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
-                  >
-                    <ChevronLeft size={24} />
-                  </button>
+                    {/* Previous Button */}
+                    {heroBannerImages.length > 1 && (
+                      <button
+                        onClick={goToPreviousImage}
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-black p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                      >
+                        <ChevronLeft size={24} />
+                      </button>
+                    )}
 
-                  {/* Next Button */}
-                  <button
-                    onClick={goToNextImage}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-black p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
-                  >
-                    <ChevronRight size={24} />
-                  </button>
+                    {/* Next Button */}
+                    {heroBannerImages.length > 1 && (
+                      <button
+                        onClick={goToNextImage}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-black p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                      >
+                        <ChevronRight size={24} />
+                      </button>
+                    )}
 
-                  {/* Floating Card */}
-                  <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-md p-6 rounded-xl shadow-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-[#F46A1F] rounded-full flex items-center justify-center">
-                        <CheckCircle2 className="text-white" size={24} />
-                      </div>
-                      <div>
-                        <div className="font-bold text-black">Quality Assured</div>
-                        <div className="text-sm text-gray-600">Professional Services</div>
+                    {/* Floating Card */}
+                    <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-md p-6 rounded-xl shadow-lg">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-[#F46A1F] rounded-full flex items-center justify-center">
+                          <CheckCircle2 className="text-white" size={24} />
+                        </div>
+                        <div>
+                          <div className="font-bold text-black">Quality Assured</div>
+                          <div className="text-sm text-gray-600">Professional Services</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Image Indicators/Dots */}
-                  <div className="absolute bottom-28 left-0 right-0 flex justify-center gap-2 z-20">
-                    {heroBannerImages.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => goToImage(index)}
-                        className={`h-3 rounded-full transition-all duration-300 ${
-                          index === currentImageIndex
-                            ? 'bg-white w-8'
-                            : 'bg-white/50 w-3 hover:bg-white/75'
-                        }`}
-                        aria-label={`Go to image ${index + 1}`}
-                      />
-                    ))}
-                  </div>
-                </div>
+                    {/* Image Indicators/Dots */}
+                    {heroBannerImages.length > 1 && (
+                      <div className="absolute bottom-28 left-0 right-0 flex justify-center gap-2 z-20">
+                        {heroBannerImages.map((_, index) => (
+                          <button
+                            key={index}
+                            onClick={() => goToImage(index)}
+                            className={`h-3 rounded-full transition-all duration-300 ${
+                              index === currentImageIndex
+                                ? 'bg-white w-8'
+                                : 'bg-white/50 w-3 hover:bg-white/75'
+                            }`}
+                            aria-label={`Go to image ${index + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
 
-                {/* Decorative Elements */}
-                <div className="absolute -top-6 -right-6 w-32 h-32 bg-[#F46A1F]/20 rounded-full blur-3xl" />
-                <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-[#F46A1F]/20 rounded-full blur-3xl" />
+                    {/* Decorative Elements */}
+                    <div className="absolute -top-6 -right-6 w-32 h-32 bg-[#F46A1F]/20 rounded-full blur-3xl" />
+                    <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-[#F46A1F]/20 rounded-full blur-3xl" />
+                  </div>
+                ) : (
+                  <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gray-200 h-[500px] flex items-center justify-center">
+                    <p className="text-gray-500">No images uploaded yet</p>
+                  </div>
+                )}
               </motion.div>
             </div>
           </div>
@@ -201,26 +327,47 @@ const Home: React.FC = () => {
             >
               <div>
                 <img
-                  src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80"
+                  src={aboutSection?.image || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80"}
                   alt="About RASS Engineering"
                   className="w-full h-[400px] object-cover rounded-2xl shadow-xl"
                 />
               </div>
 
               <div>
-                <div className="text-[#F46A1F] font-semibold mb-3">ABOUT US</div>
+                <div className="text-[#F46A1F] font-semibold mb-3">
+                  {aboutSection?.subtitle || 'ABOUT US'}
+                </div>
                 <h2 className="text-4xl md:text-5xl font-bold text-black mb-6">
-                  Building Trust Since 2050 B.S.
+                  {aboutSection?.title || 'Building Trust Since 2050 B.S.'}
                 </h2>
-                <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                  Under the visionary leadership of <strong>{companyInfo.managingDirector.name}</strong>,
-                  RASS Engineering has been at the forefront of specialized construction solutions for over
-                  three decades.
-                </p>
-                <p className="text-gray-600 leading-relaxed mb-6">
-                  We combine advanced technologies with time-tested engineering principles to deliver exceptional 
-                  results that stand the test of time.
-                </p>
+                <div className="text-gray-600 leading-relaxed space-y-4">
+                  {aboutSection?.description1 ? (
+                    <>
+                      <p className="text-lg">{aboutSection.description1}</p>
+                      {aboutSection.description2 && (
+                        <p>{aboutSection.description2}</p>
+                      )}
+                      {aboutSection.managingDirector && (
+                        <p>
+                          Under the visionary leadership of <strong>{aboutSection.managingDirector}</strong>,
+                          RASS Engineering continues to deliver excellence.
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-lg">
+                        Under the visionary leadership of <strong>{companyInfo.managingDirector.name}</strong>,
+                        RASS Engineering has been at the forefront of specialized construction solutions for over
+                        three decades.
+                      </p>
+                      <p>
+                        We combine advanced technologies with time-tested engineering principles to deliver exceptional 
+                        results that stand the test of time.
+                      </p>
+                    </>
+                  )}
+                </div>
                 <Link to="/about">
                   <Button className="bg-black hover:bg-gray-800 text-white px-6 py-3 transition-colors">
                     Read More
@@ -251,37 +398,71 @@ const Home: React.FC = () => {
             </motion.div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {servicesData.map((service, index) => {
-                const IconComponent = Icons[service.icon as keyof typeof Icons] as React.ComponentType<{ className?: string; size?: number }>;
-                return (
-                  <motion.div
-                    key={service.id}
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 bg-white rounded-2xl overflow-hidden group">
-                      <CardContent className="p-6">
-                        <div className="w-14 h-14 bg-[#F46A1F]/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-[#F46A1F] transition-colors">
-                          <IconComponent className="text-[#F46A1F] group-hover:text-white transition-colors" size={28} />
-                        </div>
-                        <h3 className="text-xl font-bold text-black mb-3">{service.title}</h3>
-                        <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                          {service.description}
-                        </p>
-                        <Link
-                          to={`/services#${service.id}`}
-                          className="text-[#F46A1F] font-semibold text-sm flex items-center hover:gap-2 transition-all"
-                        >
-                          Learn More
-                          <ArrowRight size={16} className="ml-1" />
-                        </Link>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
+              {services.length > 0 ? (
+                services.slice(0, 6).map((service, index) => {
+                  const IconComponent = (Icons[service.icon as keyof typeof Icons] || Icons.Wrench) as React.ComponentType<{ className?: string; size?: number }>;
+                  return (
+                    <motion.div
+                      key={service._id || service.id}
+                      initial={{ opacity: 0, y: 50 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 bg-white rounded-2xl overflow-hidden group">
+                        <CardContent className="p-6">
+                          <div className="w-14 h-14 bg-[#F46A1F]/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-[#F46A1F] transition-colors">
+                            <IconComponent className="text-[#F46A1F] group-hover:text-white transition-colors" size={28} />
+                          </div>
+                          <h3 className="text-xl font-bold text-black mb-3">{service.title}</h3>
+                          <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                            {service.description}
+                          </p>
+                          <Link
+                            to={`/services#${service.id || service._id}`}
+                            className="text-[#F46A1F] font-semibold text-sm flex items-center hover:gap-2 transition-all"
+                          >
+                            Learn More
+                            <ArrowRight size={16} className="ml-1" />
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })
+              ) : (
+                servicesData.slice(0, 6).map((service, index) => {
+                  const IconComponent = Icons[service.icon as keyof typeof Icons] as React.ComponentType<{ className?: string; size?: number }>;
+                  return (
+                    <motion.div
+                      key={service.id}
+                      initial={{ opacity: 0, y: 50 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 bg-white rounded-2xl overflow-hidden group">
+                        <CardContent className="p-6">
+                          <div className="w-14 h-14 bg-[#F46A1F]/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-[#F46A1F] transition-colors">
+                            <IconComponent className="text-[#F46A1F] group-hover:text-white transition-colors" size={28} />
+                          </div>
+                          <h3 className="text-xl font-bold text-black mb-3">{service.title}</h3>
+                          <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                            {service.description}
+                          </p>
+                          <Link
+                            to={`/services#${service.id}`}
+                            className="text-[#F46A1F] font-semibold text-sm flex items-center hover:gap-2 transition-all"
+                          >
+                            Learn More
+                            <ArrowRight size={16} className="ml-1" />
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })
+              )}
             </div>
 
             <div className="text-center mt-12">
@@ -294,7 +475,7 @@ const Home: React.FC = () => {
           </div>
         </section>
 
-        {/* Why Choose Us */}
+        {/* Why Choose Us - Static Section */}
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
@@ -311,7 +492,7 @@ const Home: React.FC = () => {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
               {whyChooseUsData.map((item, index) => {
-                const IconComponent = Icons[item.icon as keyof typeof Icons] as React.ComponentType<{ className?: string; size?: number }>;
+                const IconComponent = (Icons[item.icon as keyof typeof Icons] || Icons.Award) as React.ComponentType<{ className?: string; size?: number }>;
                 return (
                   <motion.div
                     key={index}
@@ -349,10 +530,10 @@ const Home: React.FC = () => {
               transition={{ duration: 0.7 }}
             >
               <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                Ready to Start Your Project?
+                {contactCTA?.title || 'Ready to Start Your Project?'}
               </h2>
               <p className="text-xl text-gray-300 mb-10">
-                Get a free site inspection and consultation from our expert engineers
+                {contactCTA?.subtitle || 'Get a free site inspection and consultation from our expert engineers'}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -380,7 +561,7 @@ const Home: React.FC = () => {
               <div className="mt-10">
                 <Link to="/request-quote">
                   <Button className="bg-[#F46A1F] hover:bg-[#d85a15] text-white px-10 py-6 text-lg transition-all hover:scale-105">
-                    Get Free Site Inspection
+                    {contactCTA?.buttonText || 'Get Free Site Inspection'}
                     <ArrowRight className="ml-2" size={20} />
                   </Button>
                 </Link>
