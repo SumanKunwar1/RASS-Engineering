@@ -183,7 +183,7 @@ const Home: React.FC = () => {
                       <Link key={button.id} to={button.route}>
                         <Button 
                           className={button.variant === 'outline' 
-                            ? 'border-2 border-black text-black px-8 py-6 text-lg hover:bg-black hover:text-white transition-all' 
+                            ? 'border-2 border-black text-black bg-transparent px-8 py-6 text-lg hover:bg-black hover:text-white transition-all duration-300' 
                             : 'bg-[#F46A1F] hover:bg-[#d85a15] text-white px-8 py-6 text-lg transition-all hover:scale-105'
                           }
                         >
@@ -201,7 +201,7 @@ const Home: React.FC = () => {
                         </Button>
                       </Link>
                       <Link to="/request-quote">
-                        <Button variant="outline" className="border-2 border-black text-black px-8 py-6 text-lg hover:bg-black hover:text-white transition-all">
+                        <Button variant="outline" className="border-2 border-black text-black bg-transparent px-8 py-6 text-lg hover:bg-black hover:text-white transition-all duration-300">
                           Request Consultation
                         </Button>
                       </Link>
