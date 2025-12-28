@@ -14,6 +14,9 @@ import uploadRoutes from './routes/upload.routes';
 import projectRoutes from './routes/project.routes';
 import blogRoutes from './routes/blog.routes';
 import serviceRoutes from './routes/service.routes';
+import contactRoutes from './routes/contact.routes';
+import quoteRoutes from './routes/quote.routes';
+import aboutRoutes from './routes/about.routes';
 
 const app: Application = express();
 
@@ -71,6 +74,9 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/contacts', contactRoutes);
+app.use('/api/quotes', quoteRoutes);
+app.use('/api/about', aboutRoutes);
 
 // 404 Handler
 app.use('*', (req: Request, res: Response) => {

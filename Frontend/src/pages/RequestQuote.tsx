@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { toast } from 'sonner';
+import axios from 'axios';
 
 interface QuoteFormData {
   name: string;
@@ -21,6 +22,8 @@ interface QuoteFormData {
   address: string;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const RequestQuote: React.FC = () => {
   const [formData, setFormData] = useState<QuoteFormData>({
     name: '',
@@ -35,23 +38,38 @@ const RequestQuote: React.FC = () => {
     description: '',
     address: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast.success('Quote request submitted! We will contact you within 24 hours.');
-    setFormData({
-      name: '',
-      company: '',
-      phone: '',
-      email: '',
-      serviceType: '',
-      projectType: '',
-      projectSize: '',
-      timeline: '',
-      budget: '',
-      description: '',
-      address: ''
-    });
+    setIsSubmitting(true);
+
+    try {
+      const response = await axios.post(`${API_URL}/quotes`, formData);
+      
+      if (response.data.success) {
+        toast.success(response.data.message || 'Quote request submitted! We will contact you within 24 hours.');
+        setFormData({
+          name: '',
+          company: '',
+          phone: '',
+          email: '',
+          serviceType: '',
+          projectType: '',
+          projectSize: '',
+          timeline: '',
+          budget: '',
+          description: '',
+          address: ''
+        });
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Failed to submit quote request. Please try again.';
+      toast.error(errorMessage);
+      console.error('Quote submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -124,6 +142,7 @@ const RequestQuote: React.FC = () => {
                           value={formData.name}
                           onChange={handleChange}
                           required
+                          disabled={isSubmitting}
                           className="bg-white border-gray-300"
                           placeholder="Enter your name"
                         />
@@ -137,6 +156,7 @@ const RequestQuote: React.FC = () => {
                           type="text"
                           value={formData.company}
                           onChange={handleChange}
+                          disabled={isSubmitting}
                           className="bg-white border-gray-300"
                           placeholder="Optional"
                         />
@@ -151,6 +171,7 @@ const RequestQuote: React.FC = () => {
                           value={formData.phone}
                           onChange={handleChange}
                           required
+                          disabled={isSubmitting}
                           className="bg-white border-gray-300"
                           placeholder="Your phone number"
                         />
@@ -165,6 +186,7 @@ const RequestQuote: React.FC = () => {
                           value={formData.email}
                           onChange={handleChange}
                           required
+                          disabled={isSubmitting}
                           className="bg-white border-gray-300"
                           placeholder="Your email"
                         />
@@ -184,6 +206,7 @@ const RequestQuote: React.FC = () => {
                           value={formData.serviceType}
                           onChange={handleChange}
                           required
+                          disabled={isSubmitting}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#F46A1F]"
                         >
                           <option value="">Select a service</option>
@@ -202,6 +225,7 @@ const RequestQuote: React.FC = () => {
                             name="projectType"
                             value={formData.projectType}
                             onChange={handleChange}
+                            disabled={isSubmitting}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#F46A1F]"
                           >
                             <option value="">Select type</option>
@@ -221,6 +245,7 @@ const RequestQuote: React.FC = () => {
                             type="text"
                             value={formData.projectSize}
                             onChange={handleChange}
+                            disabled={isSubmitting}
                             className="bg-white border-gray-300"
                             placeholder="Approximate area"
                           />
@@ -235,6 +260,7 @@ const RequestQuote: React.FC = () => {
                             name="timeline"
                             value={formData.timeline}
                             onChange={handleChange}
+                            disabled={isSubmitting}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#F46A1F]"
                           >
                             <option value="">Select timeline</option>
@@ -253,6 +279,7 @@ const RequestQuote: React.FC = () => {
                             name="budget"
                             value={formData.budget}
                             onChange={handleChange}
+                            disabled={isSubmitting}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#F46A1F]"
                           >
                             <option value="">Select budget</option>
@@ -274,6 +301,7 @@ const RequestQuote: React.FC = () => {
                           value={formData.address}
                           onChange={handleChange}
                           required
+                          disabled={isSubmitting}
                           className="bg-white border-gray-300"
                           placeholder="City, District"
                         />
@@ -287,6 +315,7 @@ const RequestQuote: React.FC = () => {
                           value={formData.description}
                           onChange={handleChange}
                           required
+                          disabled={isSubmitting}
                           rows={6}
                           className="bg-white border-gray-300 resize-none"
                           placeholder="Please provide details about your project requirements, challenges, and any specific needs"
@@ -299,9 +328,10 @@ const RequestQuote: React.FC = () => {
                   <div className="pt-4">
                     <Button
                       type="submit"
-                      className="w-full bg-[#F46A1F] hover:bg-[#d85a15] text-white py-6 text-lg font-semibold transition-all hover:scale-[1.02]"
+                      disabled={isSubmitting}
+                      className="w-full bg-[#F46A1F] hover:bg-[#d85a15] text-white py-6 text-lg font-semibold transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Submit Quote Request
+                      {isSubmitting ? 'Submitting...' : 'Submit Quote Request'}
                     </Button>
                     <p className="text-center text-sm text-gray-600 mt-4">
                       We will review your request and get back to you within 24 hours

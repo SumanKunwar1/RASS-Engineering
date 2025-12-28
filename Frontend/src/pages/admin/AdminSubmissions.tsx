@@ -1,26 +1,29 @@
-import React, { useState } from 'react';
-import { Eye, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Eye, X, Loader2 } from 'lucide-react';
+import axios from 'axios';
+import { toast } from 'sonner';
 
 // Types
 interface QuoteSubmission {
-  id: string;
+  _id: string;
   name: string;
-  company: string;
+  company?: string;
   phone: string;
   email: string;
   serviceType: string;
-  projectType: string;
-  projectSize: string;
-  timeline: string;
-  budget: string;
+  projectType?: string;
+  projectSize?: string;
+  timeline?: string;
+  budget?: string;
   description: string;
   address: string;
   status: 'new' | 'contacted' | 'quoted' | 'closed';
   createdAt: string;
+  updatedAt: string;
 }
 
 interface ContactSubmission {
-  id: string;
+  _id: string;
   name: string;
   phone: string;
   email: string;
@@ -28,66 +31,28 @@ interface ContactSubmission {
   message: string;
   status: 'new' | 'read' | 'replied';
   createdAt: string;
+  updatedAt: string;
 }
 
-// Mock Data
-const mockQuotes: QuoteSubmission[] = [
-  {
-    id: '1',
-    name: 'John Doe',
-    company: 'ABC Construction',
-    phone: '+977-9841234567',
-    email: 'john@abc.com',
-    serviceType: 'construction',
-    projectType: 'commercial',
-    projectSize: '5000',
-    timeline: '2-3-months',
-    budget: '2m-5m',
-    description: 'Need structural engineering services for a new commercial building project in Kathmandu.',
-    address: 'Kathmandu, Nepal',
-    status: 'new',
-    createdAt: '2024-12-20 10:30 AM'
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    company: 'XYZ Developers',
-    phone: '+977-9851234567',
-    email: 'jane@xyz.com',
-    serviceType: 'engineering',
-    projectType: 'residential',
-    projectSize: '3000',
-    timeline: '1-month',
-    budget: '1m-2m',
-    description: 'Looking for MEP design services for residential apartment complex.',
-    address: 'Lalitpur, Nepal',
-    status: 'contacted',
-    createdAt: '2024-12-19 02:15 PM'
-  }
-];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const mockContacts: ContactSubmission[] = [
-  {
-    id: '1',
-    name: 'Ram Sharma',
-    phone: '+977-9861234567',
-    email: 'ram@email.com',
-    serviceType: 'specialized',
-    message: 'I would like to know more about your specialized construction services.',
-    status: 'new',
-    createdAt: '2024-12-21 09:00 AM'
-  },
-  {
-    id: '2',
-    name: 'Sita Thapa',
-    phone: '+977-9871234567',
-    email: 'sita@email.com',
-    serviceType: 'consultation',
-    message: 'Need consultation for home renovation project.',
-    status: 'read',
-    createdAt: '2024-12-20 04:30 PM'
+// Get auth token
+const getAuthToken = () => {
+  return localStorage.getItem('rass_admin_token');
+};
+
+// Axios instance with auth
+const api = axios.create({
+  baseURL: API_URL,
+});
+
+api.interceptors.request.use((config) => {
+  const token = getAuthToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-];
+  return config;
+});
 
 // Modal Component
 const Modal = ({ isOpen, onClose, title, children }: any) => {
@@ -112,20 +77,76 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
 };
 
 export default function AdminSubmissions() {
-  const [quoteSubmissions] = useState<QuoteSubmission[]>(mockQuotes);
-  const [contactSubmissions] = useState<ContactSubmission[]>(mockContacts);
+  const [quoteSubmissions, setQuoteSubmissions] = useState<QuoteSubmission[]>([]);
+  const [contactSubmissions, setContactSubmissions] = useState<ContactSubmission[]>([]);
   const [activeTab, setActiveTab] = useState<'quotes' | 'contacts'>('quotes');
   const [viewingQuote, setViewingQuote] = useState<QuoteSubmission | null>(null);
   const [viewingContact, setViewingContact] = useState<ContactSubmission | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const updateQuoteStatus = (id: string, status: QuoteSubmission['status']) => {
-    console.log(`Update quote ${id} to ${status}`);
-    // In real app, dispatch to context
+  // Fetch data
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [quotesRes, contactsRes] = await Promise.all([
+        api.get('/quotes'),
+        api.get('/contacts')
+      ]);
+
+      if (quotesRes.data.success) {
+        setQuoteSubmissions(quotesRes.data.data);
+      }
+      if (contactsRes.data.success) {
+        setContactSubmissions(contactsRes.data.data);
+      }
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || 'Failed to fetch submissions';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      console.error('Fetch submissions error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateContactStatus = (id: string, status: ContactSubmission['status']) => {
-    console.log(`Update contact ${id} to ${status}`);
-    // In real app, dispatch to context
+  const updateQuoteStatus = async (id: string, status: QuoteSubmission['status']) => {
+    try {
+      const response = await api.patch(`/quotes/${id}/status`, { status });
+      
+      if (response.data.success) {
+        setQuoteSubmissions(prev =>
+          prev.map(q => q._id === id ? { ...q, status } : q)
+        );
+        toast.success('Quote status updated successfully');
+      }
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || 'Failed to update quote status';
+      toast.error(errorMsg);
+      console.error('Update quote status error:', err);
+    }
+  };
+
+  const updateContactStatus = async (id: string, status: ContactSubmission['status']) => {
+    try {
+      const response = await api.patch(`/contacts/${id}/status`, { status });
+      
+      if (response.data.success) {
+        setContactSubmissions(prev =>
+          prev.map(c => c._id === id ? { ...c, status } : c)
+        );
+        toast.success('Contact status updated successfully');
+      }
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || 'Failed to update contact status';
+      toast.error(errorMsg);
+      console.error('Update contact status error:', err);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -145,8 +166,26 @@ export default function AdminSubmissions() {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const newQuotes = quoteSubmissions.filter(q => q.status === 'new').length;
   const newContacts = contactSubmissions.filter(c => c.status === 'new').length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -156,6 +195,12 @@ export default function AdminSubmissions() {
           <h1 className="text-3xl font-bold text-gray-900">Submissions</h1>
           <p className="text-gray-600 mt-1">View and manage quote requests and contact messages</p>
         </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
+            {error}
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow-sm">
@@ -197,103 +242,111 @@ export default function AdminSubmissions() {
           {/* Quote Requests Table */}
           {activeTab === 'quotes' && (
             <div className="p-6">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Name</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Company</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Email</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Service</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Date</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {quoteSubmissions.map((quote) => (
-                      <tr key={quote.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 text-gray-900">{quote.name}</td>
-                        <td className="py-3 px-4 text-gray-600">{quote.company}</td>
-                        <td className="py-3 px-4 text-gray-600">{quote.email}</td>
-                        <td className="py-3 px-4 text-gray-600 capitalize">{quote.serviceType}</td>
-                        <td className="py-3 px-4 text-gray-600">{quote.createdAt}</td>
-                        <td className="py-3 px-4">
-                          <select
-                            value={quote.status}
-                            onChange={(e) => updateQuoteStatus(quote.id, e.target.value as any)}
-                            className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(quote.status)}`}
-                          >
-                            <option value="new">New</option>
-                            <option value="contacted">Contacted</option>
-                            <option value="quoted">Quoted</option>
-                            <option value="closed">Closed</option>
-                          </select>
-                        </td>
-                        <td className="py-3 px-4">
-                          <button
-                            onClick={() => setViewingQuote(quote)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          >
-                            <Eye size={18} />
-                          </button>
-                        </td>
+              {quoteSubmissions.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No quote requests yet</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Name</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Company</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Email</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Service</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Date</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {quoteSubmissions.map((quote) => (
+                        <tr key={quote._id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 text-gray-900">{quote.name}</td>
+                          <td className="py-3 px-4 text-gray-600">{quote.company || 'N/A'}</td>
+                          <td className="py-3 px-4 text-gray-600">{quote.email}</td>
+                          <td className="py-3 px-4 text-gray-600 capitalize">{quote.serviceType}</td>
+                          <td className="py-3 px-4 text-gray-600">{formatDate(quote.createdAt)}</td>
+                          <td className="py-3 px-4">
+                            <select
+                              value={quote.status}
+                              onChange={(e) => updateQuoteStatus(quote._id, e.target.value as any)}
+                              className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(quote.status)}`}
+                            >
+                              <option value="new">New</option>
+                              <option value="contacted">Contacted</option>
+                              <option value="quoted">Quoted</option>
+                              <option value="closed">Closed</option>
+                            </select>
+                          </td>
+                          <td className="py-3 px-4">
+                            <button
+                              onClick={() => setViewingQuote(quote)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            >
+                              <Eye size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
           {/* Contact Messages Table */}
           {activeTab === 'contacts' && (
             <div className="p-6">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Name</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Email</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Phone</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Service</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Date</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {contactSubmissions.map((contact) => (
-                      <tr key={contact.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 text-gray-900">{contact.name}</td>
-                        <td className="py-3 px-4 text-gray-600">{contact.email}</td>
-                        <td className="py-3 px-4 text-gray-600">{contact.phone}</td>
-                        <td className="py-3 px-4 text-gray-600 capitalize">{contact.serviceType}</td>
-                        <td className="py-3 px-4 text-gray-600">{contact.createdAt}</td>
-                        <td className="py-3 px-4">
-                          <select
-                            value={contact.status}
-                            onChange={(e) => updateContactStatus(contact.id, e.target.value as any)}
-                            className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(contact.status)}`}
-                          >
-                            <option value="new">New</option>
-                            <option value="read">Read</option>
-                            <option value="replied">Replied</option>
-                          </select>
-                        </td>
-                        <td className="py-3 px-4">
-                          <button
-                            onClick={() => setViewingContact(contact)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          >
-                            <Eye size={18} />
-                          </button>
-                        </td>
+              {contactSubmissions.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No contact messages yet</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Name</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Email</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Phone</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Service</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Date</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Status</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {contactSubmissions.map((contact) => (
+                        <tr key={contact._id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 text-gray-900">{contact.name}</td>
+                          <td className="py-3 px-4 text-gray-600">{contact.email}</td>
+                          <td className="py-3 px-4 text-gray-600">{contact.phone}</td>
+                          <td className="py-3 px-4 text-gray-600 capitalize">{contact.serviceType}</td>
+                          <td className="py-3 px-4 text-gray-600">{formatDate(contact.createdAt)}</td>
+                          <td className="py-3 px-4">
+                            <select
+                              value={contact.status}
+                              onChange={(e) => updateContactStatus(contact._id, e.target.value as any)}
+                              className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(contact.status)}`}
+                            >
+                              <option value="new">New</option>
+                              <option value="read">Read</option>
+                              <option value="replied">Replied</option>
+                            </select>
+                          </td>
+                          <td className="py-3 px-4">
+                            <button
+                              onClick={() => setViewingContact(contact)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            >
+                              <Eye size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -312,7 +365,7 @@ export default function AdminSubmissions() {
               <span className={`px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor(viewingQuote.status)}`}>
                 {viewingQuote.status.toUpperCase()}
               </span>
-              <span className="text-sm text-gray-500">{viewingQuote.createdAt}</span>
+              <span className="text-sm text-gray-500">{formatDate(viewingQuote.createdAt)}</span>
             </div>
 
             {/* Personal Information */}
@@ -409,7 +462,7 @@ export default function AdminSubmissions() {
               <span className={`px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor(viewingContact.status)}`}>
                 {viewingContact.status.toUpperCase()}
               </span>
-              <span className="text-sm text-gray-500">{viewingContact.createdAt}</span>
+              <span className="text-sm text-gray-500">{formatDate(viewingContact.createdAt)}</span>
             </div>
 
             {/* Contact Information */}

@@ -8,6 +8,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { toast } from 'sonner';
 import { companyInfo } from '../data/mockData';
+import axios from 'axios';
 
 interface FormData {
   name: string;
@@ -17,6 +18,8 @@ interface FormData {
   message: string;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -25,17 +28,32 @@ const Contact: React.FC = () => {
     serviceType: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast.success('Thank you! We will contact you soon.');
-    setFormData({
-      name: '',
-      phone: '',
-      email: '',
-      serviceType: '',
-      message: ''
-    });
+    setIsSubmitting(true);
+
+    try {
+      const response = await axios.post(`${API_URL}/contacts`, formData);
+      
+      if (response.data.success) {
+        toast.success(response.data.message || 'Thank you! We will contact you soon.');
+        setFormData({
+          name: '',
+          phone: '',
+          email: '',
+          serviceType: '',
+          message: ''
+        });
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Failed to submit form. Please try again.';
+      toast.error(errorMessage);
+      console.error('Contact submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -200,6 +218,7 @@ const Contact: React.FC = () => {
                         value={formData.name}
                         onChange={handleChange}
                         required
+                        disabled={isSubmitting}
                         className="bg-white border-gray-300"
                         placeholder="Enter your name"
                       />
@@ -215,6 +234,7 @@ const Contact: React.FC = () => {
                           value={formData.phone}
                           onChange={handleChange}
                           required
+                          disabled={isSubmitting}
                           className="bg-white border-gray-300"
                           placeholder="Your phone number"
                         />
@@ -229,6 +249,7 @@ const Contact: React.FC = () => {
                           value={formData.email}
                           onChange={handleChange}
                           required
+                          disabled={isSubmitting}
                           className="bg-white border-gray-300"
                           placeholder="Your email"
                         />
@@ -242,6 +263,7 @@ const Contact: React.FC = () => {
                         name="serviceType"
                         value={formData.serviceType}
                         onChange={handleChange}
+                        disabled={isSubmitting}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#F46A1F]"
                       >
                         <option value="">Select a service</option>
@@ -260,6 +282,7 @@ const Contact: React.FC = () => {
                         value={formData.message}
                         onChange={handleChange}
                         required
+                        disabled={isSubmitting}
                         rows={5}
                         className="bg-white border-gray-300 resize-none"
                         placeholder="Tell us about your project"
@@ -268,9 +291,10 @@ const Contact: React.FC = () => {
 
                     <Button
                       type="submit"
-                      className="w-full bg-[#F46A1F] hover:bg-[#d85a15] text-white py-6 text-lg font-semibold"
+                      disabled={isSubmitting}
+                      className="w-full bg-[#F46A1F] hover:bg-[#d85a15] text-white py-6 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Send Message
+                      {isSubmitting ? 'Sending...' : 'Send Message'}
                     </Button>
                   </div>
                 </form>
