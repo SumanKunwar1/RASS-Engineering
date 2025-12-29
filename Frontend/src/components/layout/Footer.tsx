@@ -104,11 +104,7 @@ const Footer: FC = () => {
                   Privacy Policy
                 </Link>
               </li>
-              <li>
-                <Link to="/terms" className="text-gray-400 hover:text-[#F46A1F] transition-colors text-sm">
-                  Terms & Conditions
-                </Link>
-              </li>
+              
             </ul>
           </div>
 
