@@ -168,7 +168,6 @@ const Navbar: FC = () => {
                       onClick={() => handleServiceClick(service.slug)}
                       className="w-full text-left px-5 py-4 hover:bg-[#F46A1F]/10 transition-colors border-b border-gray-100 last:border-b-0 flex items-start gap-3 group"
                     >
-                      <span className="text-2xl mt-1">{service.icon || '🏗️'}</span>
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900 group-hover:text-[#F46A1F] transition-colors text-sm">
                           {service.title}
