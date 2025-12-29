@@ -66,7 +66,7 @@ const Footer: FC = () => {
               className="h-12 w-auto mb-4 bg-white/10 p-2 rounded"
             />
             <p className="text-gray-400 text-sm leading-relaxed">
-              {companyInfo.tagline}. Professional construction and engineering solutions provider.
+              {companyInfo.tagline}. A trusted professional construction and engineering solutions provider committed to excellence and innovation.
             </p>
           </div>
 
@@ -158,7 +158,7 @@ const Footer: FC = () => {
                 <Phone size={18} className="text-[#F46A1F] mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
                   <div className="text-gray-400">Tel: {companyInfo.phone}</div>
-                  <div className="text-gray-400">Mob: {companyInfo.mobile.join(', ')}</div>
+                  <div className="text-gray-400">Cell: {companyInfo.mobile.join(', ')}</div>
                 </div>
               </li>
               <li className="flex items-start space-x-3">
