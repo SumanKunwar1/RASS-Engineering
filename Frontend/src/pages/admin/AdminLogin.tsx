@@ -9,8 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdmin } from '@/contexts/AdminContext';
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('admin@rass.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -128,11 +128,11 @@ export default function AdminLogin() {
             {/* Demo Credentials Notice */}
             <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
               <p className="text-xs text-muted-foreground text-center">
-                <strong>Demo Credentials:</strong>
+                <strong></strong>
                 <br />
-                Email: admin@rass.com
+                
                 <br />
-                Password: admin123
+                
               </p>
             </div>
           </CardContent>
