@@ -17,6 +17,8 @@ import serviceRoutes from './routes/service.routes';
 import contactRoutes from './routes/contact.routes';
 import quoteRoutes from './routes/quote.routes';
 import aboutRoutes from './routes/about.routes';
+import faqRoutes from './routes/faq.routes';
+
 
 const app: Application = express();
 
@@ -77,6 +79,7 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/about', aboutRoutes);
+app.use('/api/faqs', faqRoutes);
 
 
 // 404 Handler

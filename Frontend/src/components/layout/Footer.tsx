@@ -85,8 +85,8 @@ const Footer: FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/projects" className="text-gray-400 hover:text-[#F46A1F] transition-colors text-sm">
-                  Projects
+                <Link to="/faqs" className="text-gray-400 hover:text-[#F46A1F] transition-colors text-sm">
+                  FAQ
                 </Link>
               </li>
               <li>

@@ -25,9 +25,11 @@ import RequestQuote from './pages/RequestQuote';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import NotFound from "./pages/NotFound";
+import FAQ from "./pages/Faq";
 
 // Admin imports
 import AdminLayout from "@/components/admin/AdminLayout";
+import AdminFAQ from "./pages/admin/AdminFaq";
 import {
   AdminDashboard,
   AdminHomePage,
@@ -99,6 +101,13 @@ const App: React.FC = () => {
                     <Footer />
                   </>
                 } />
+                <Route path="/faqs" element={
+                  <>
+                    <Navbar />
+                    <FAQ />
+                    <Footer />
+                  </>
+                } />
                 <Route path="/blog/:id" element={
                   <>
                     <Navbar />
@@ -148,6 +157,7 @@ const App: React.FC = () => {
                   <Route path="services" element={<AdminServices />} />
                   <Route path="projects" element={<AdminProjects />} />
                   <Route path="blog" element={<AdminBlog />} />
+                  <Route path="faqs" element={<AdminFAQ />} />
                   <Route path="contact" element={<AdminContact />} />
                   <Route path="submissions" element={<AdminSubmissions />} />
                   <Route path="settings" element={<AdminSettings />} />

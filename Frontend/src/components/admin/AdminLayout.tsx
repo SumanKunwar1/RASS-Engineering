@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  HelpCircle,
   Menu,
   X,
   MessageSquareQuote,
@@ -33,6 +34,7 @@ const navItems: NavItem[] = [
   { icon: FolderKanban, label: 'Projects', path: '/admin/projects' },
   { icon: FileText, label: 'Blog', path: '/admin/blog' },
   { icon: Mail, label: 'Contact', path: '/admin/contact' },
+  { icon: HelpCircle, label: 'FAQs', path: '/admin/faqs' },
   { icon: MessageSquareQuote, label: 'Submissions', path: '/admin/submissions' },
   { icon: Settings, label: 'Settings', path: '/admin/settings' },
 ];
