@@ -14,6 +14,7 @@ import {
   LogOut,
   HelpCircle,
   Menu,
+  ShieldCheck,
   X,
   MessageSquareQuote,
 } from 'lucide-react';
@@ -35,6 +36,7 @@ const navItems: NavItem[] = [
   { icon: FileText, label: 'Blog', path: '/admin/blog' },
   { icon: Mail, label: 'Contact', path: '/admin/contact' },
   { icon: HelpCircle, label: 'FAQs', path: '/admin/faqs' },
+  { icon: ShieldCheck, label: 'Trusted By', path: '/admin/trustedby' },
   { icon: MessageSquareQuote, label: 'Submissions', path: '/admin/submissions' },
   { icon: Settings, label: 'Settings', path: '/admin/settings' },
 ];

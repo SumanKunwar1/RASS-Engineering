@@ -18,7 +18,7 @@ import contactRoutes from './routes/contact.routes';
 import quoteRoutes from './routes/quote.routes';
 import aboutRoutes from './routes/about.routes';
 import faqRoutes from './routes/faq.routes';
-
+import trustedByRoutes from './routes/trustedBy.routes';
 
 const app: Application = express();
 
@@ -80,6 +80,7 @@ app.use('/api/contacts', contactRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/about', aboutRoutes);
 app.use('/api/faqs', faqRoutes);
+app.use('/api/trusted-by', trustedByRoutes);
 
 
 // 404 Handler

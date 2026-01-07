@@ -9,6 +9,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { servicesData, whyChooseUsData, companyInfo } from '../data/mockData';
 import { homeAPI } from '../services/api.service';
 import { toast } from 'sonner';
+import TrustedBy from './TrustedBy';
 
 interface HeroSection {
   title: string;
@@ -513,6 +514,9 @@ const Home: React.FC = () => {
             </div>
           </div>
         </section>
+
+        <TrustedBy />
+
 
         {/* CTA Section */}
         <section className="py-20 bg-black text-white relative overflow-hidden">
