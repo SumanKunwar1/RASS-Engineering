@@ -11,6 +11,7 @@ import { AdminProvider } from "@/contexts/AdminContext";
 // Layout Components
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import WhatsAppFloatingButton from './components/WhatsAppFloatingButton';
 
 // Pages
 import Home from './pages/Home';
@@ -66,6 +67,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <Home />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/about" element={
@@ -73,6 +75,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <About />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/services" element={
@@ -80,6 +83,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <Services />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/projects" element={
@@ -87,6 +91,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <Projects />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/projects/:id" element={
@@ -94,6 +99,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <ProjectDetail />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/blog" element={
@@ -101,6 +107,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <Blog />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/faqs" element={
@@ -108,6 +115,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <FAQ />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/blog/:id" element={
@@ -115,6 +123,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <BlogDetail />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/contact" element={
@@ -122,6 +131,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <Contact />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/request-quote" element={
@@ -129,6 +139,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <RequestQuote />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/privacy" element={
@@ -136,6 +147,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <Privacy />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/terms" element={
@@ -143,6 +155,7 @@ const App: React.FC = () => {
                     <Navbar />
                     <Terms />
                     <Footer />
+                    <WhatsAppFloatingButton />
                   </>
                 } />
                 <Route path="/admin/login" element={<AdminLogin />} />
