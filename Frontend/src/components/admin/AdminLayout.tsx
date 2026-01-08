@@ -3,6 +3,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
   Home,
+  User,
   Info,
   Wrench,
   FolderKanban,
@@ -38,8 +39,8 @@ const navItems: NavItem[] = [
   { icon: HelpCircle, label: 'FAQs', path: '/admin/faqs' },
   { icon: ShieldCheck, label: 'Trusted By', path: '/admin/trustedby' },
   { icon: MessageSquareQuote, label: 'Submissions', path: '/admin/submissions' },
+  { icon: User, label: 'Testimonials', path: '/admin/testimonials' },
   { icon: Settings, label: 'Settings', path: '/admin/settings' },
-  { icon: Settings, label: 'Testimonials', path: '/admin/testimonials' },
 
 ];
 

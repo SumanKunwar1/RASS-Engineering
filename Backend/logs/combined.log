@@ -985,3 +985,12 @@
 {"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-00.rttgmtn.mongodb.net","timestamp":"2026-01-08 14:55:36"}
 {"level":"info","message":"📦 Database: test","timestamp":"2026-01-08 14:55:36"}
 {"level":"info","message":"Admin user already exists","timestamp":"2026-01-08 14:55:37"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2026-01-08 14:56:56"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2026-01-08 14:56:58"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2026-01-08 14:56:58"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2026-01-08 14:56:58"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-02.rttgmtn.mongodb.net","timestamp":"2026-01-08 14:57:02"}
+{"level":"info","message":"📦 Database: test","timestamp":"2026-01-08 14:57:02"}
+{"level":"info","message":"Admin user already exists","timestamp":"2026-01-08 14:57:02"}
+{"level":"info","message":"Admin logged in: admin@rass.com","timestamp":"2026-01-08 15:02:47"}
+{"level":"info","message":"Testimonial created by admin: admin@rass.com","timestamp":"2026-01-08 15:04:05"}

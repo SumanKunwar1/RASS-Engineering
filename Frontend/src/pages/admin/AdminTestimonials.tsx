@@ -7,9 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Pencil, Plus, Trash2, Eye, EyeOff, Loader2, Upload, Star } from 'lucide-react';
+import { Pencil, Plus, Trash2, Eye, EyeOff, Loader2, Star } from 'lucide-react';
 import axios from 'axios';
-import { useImageUpload } from '@/hooks/userImagesUploads';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -46,7 +45,6 @@ export default function AdminTestimonials() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
-  const { uploadSingleImage, isUploading } = useImageUpload();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -121,19 +119,6 @@ export default function AdminTestimonials() {
       order: 0,
       active: true
     });
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const result = await uploadSingleImage(file, 'rass-engineering/testimonials');
-      setFormData({ ...formData, image: result.url });
-      toast.success('Image uploaded successfully!');
-    } catch (error) {
-      toast.error('Failed to upload image');
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -374,54 +359,29 @@ export default function AdminTestimonials() {
           </div>
 
           <div>
-            <Label htmlFor="image">Profile Image (Optional)</Label>
-            <div className="space-y-3">
-              <Input
-                id="image"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                placeholder="Image URL"
-              />
-              
-              <div className="relative">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                  disabled={isUploading}
+            <Label htmlFor="image">Profile Image URL (Optional)</Label>
+            <Input
+              id="image"
+              value={formData.image}
+              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+              placeholder="https://example.com/image.jpg"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Paste the image URL here
+            </p>
+            
+            {formData.image && (
+              <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg mt-3">
+                <img
+                  src={formData.image}
+                  alt="Preview"
+                  className="w-20 h-20 rounded-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://via.placeholder.com/100?text=Invalid';
+                  }}
                 />
-                <label
-                  htmlFor="image-upload"
-                  className={`flex items-center justify-center gap-2 w-full px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
-                    isUploading ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="text-sm">Uploading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload size={16} />
-                      <span className="text-sm">Upload Image</span>
-                    </>
-                  )}
-                </label>
               </div>
-
-              {formData.image && (
-                <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg">
-                  <img
-                    src={formData.image}
-                    alt="Preview"
-                    className="w-20 h-20 rounded-full object-cover"
-                  />
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-4">

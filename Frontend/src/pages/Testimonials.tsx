@@ -33,7 +33,7 @@ const Testimonials: React.FC = () => {
     const interval = setInterval(() => {
       setDirection(1);
       setCurrentIndex((prev) => (prev + 1) % testimonials.length);
-    }, 5000); // Auto-slide every 5 seconds
+    }, 4000); // Auto-slide every 2 seconds
 
     return () => clearInterval(interval);
   }, [testimonials.length]);
