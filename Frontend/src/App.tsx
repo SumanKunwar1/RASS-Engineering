@@ -31,6 +31,7 @@ import FAQ from "./pages/Faq";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminFAQ from "./pages/admin/AdminFaq";
 import AdminTrustedBy from "./pages/admin/AdminTrustedBy";
+import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import {
   AdminDashboard,
   AdminHomePage,
@@ -163,6 +164,7 @@ const App: React.FC = () => {
                   <Route path="submissions" element={<AdminSubmissions />} />
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="trustedby" element={<AdminTrustedBy />} />
+                  <Route path="testimonials" element={<AdminTestimonials />} />
                 </Route>
 
                 {/* 404 Not Found - Catch all routes */}

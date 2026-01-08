@@ -10,6 +10,7 @@ import { servicesData, whyChooseUsData, companyInfo } from '../data/mockData';
 import { homeAPI } from '../services/api.service';
 import { toast } from 'sonner';
 import TrustedBy from './TrustedBy';
+import Testimonials from './Testimonials';
 
 interface HeroSection {
   title: string;
@@ -110,7 +111,7 @@ const Home: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % heroBannerImages.length);
-    }, 5000);
+    }, 2000);
     return () => clearInterval(interval);
   }, [heroBannerImages.length]);
 
@@ -159,7 +160,7 @@ const Home: React.FC = () => {
 
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* Left Content */}
+              {/* Left Content  as per my client he want the the photo as left side then, below the photo there is the name and position and the company name and right side the testinominal*/}
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -514,9 +515,10 @@ const Home: React.FC = () => {
             </div>
           </div>
         </section>
+        <Testimonials />
 
         <TrustedBy />
-
+  {/* Add Testimonials Section */}
 
         {/* CTA Section */}
         <section className="py-20 bg-black text-white relative overflow-hidden">

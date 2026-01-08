@@ -39,6 +39,8 @@ const navItems: NavItem[] = [
   { icon: ShieldCheck, label: 'Trusted By', path: '/admin/trustedby' },
   { icon: MessageSquareQuote, label: 'Submissions', path: '/admin/submissions' },
   { icon: Settings, label: 'Settings', path: '/admin/settings' },
+  { icon: Settings, label: 'Testimonials', path: '/admin/testimonials' },
+
 ];
 
 export default function AdminLayout() {
