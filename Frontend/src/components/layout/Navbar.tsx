@@ -68,7 +68,8 @@ const Navbar: FC = () => {
     { name: 'About', path: '/about' },
     { name: 'Projects', path: '/projects' },
     { name: 'Blog', path: '/blog' },
-    { name: 'Contact', path: '/contact' }
+    { name: 'Contact', path: '/contact' },
+  
   ];
 
   const handleServiceClick = (serviceSlug: string) => {
@@ -215,7 +216,7 @@ const Navbar: FC = () => {
           <div className="hidden lg:block">
             <Link to="/request-quote">
               <Button className="bg-[#F46A1F] hover:bg-[#d85a15] text-white px-6 py-2 transition-colors">
-                Request Quote
+                Inquiry
               </Button>
             </Link>
           </div>
@@ -227,6 +228,7 @@ const Navbar: FC = () => {
             aria-label="Toggle mobile menu"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            
           </button>
         </div>
       </div>
@@ -323,7 +325,10 @@ const Navbar: FC = () => {
               >
                 {link.name}
               </Link>
+              
             ))}
+            
+            
 
             <Link
               to="/request-quote"
