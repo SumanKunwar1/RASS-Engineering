@@ -35,9 +35,11 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Body Parser Middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body Parser Middleware - UPDATED: Increased from 10mb to 100mb to handle Base64 encoded images
+// Base64 encoding increases image size by ~33%, so larger limit is needed
+const bodyLimit = process.env.MAX_REQUEST_SIZE || '100mb';
+app.use(express.json({ limit: bodyLimit }));
+app.use(express.urlencoded({ extended: true, limit: bodyLimit }));
 
 // Logging Middleware
 if (process.env.NODE_ENV === 'development') {
