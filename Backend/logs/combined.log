@@ -1036,3 +1036,15 @@
 {"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/jllpahzmprgeaa5m9fry","timestamp":"2026-01-22 14:40:04"}
 {"level":"info","message":"12 images uploaded to Cloudinary","timestamp":"2026-01-22 14:40:04"}
 {"level":"info","message":"Project created by admin: admin@rass.com - Distinctio Itaque h","timestamp":"2026-01-22 14:40:04"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2026-01-22 14:53:10"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2026-01-22 14:53:11"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2026-01-22 14:53:11"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2026-01-22 14:53:11"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-02.rttgmtn.mongodb.net","timestamp":"2026-01-22 14:53:13"}
+{"level":"info","message":"📦 Database: test","timestamp":"2026-01-22 14:53:13"}
+{"level":"info","message":"Admin user already exists","timestamp":"2026-01-22 14:53:14"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/blog/jjtcs7evjapgdq8pwnbj","timestamp":"2026-01-22 14:54:40"}
+{"level":"info","message":"Blog created by admin: admin@rass.com - Esse sint ut eos n","timestamp":"2026-01-22 14:54:41"}
+{"level":"info","message":"Image deleted from Cloudinary: rass-engineering/blog/jjtcs7evjapgdq8pwnbj - ok","timestamp":"2026-01-22 14:55:03"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/blog/u2gozaws8tzyjni3jdaa","timestamp":"2026-01-22 14:55:07"}
+{"level":"info","message":"Blog updated by admin: admin@rass.com - Esse sint ut eos n","timestamp":"2026-01-22 14:55:07"}

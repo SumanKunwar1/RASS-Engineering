@@ -1,0 +1,135 @@
+/* TrustedBy Infinite Scroll Animation */
+
+.trusted-by-scroll-wrapper {
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0.95) 50%, #fff 100%);
+  padding: 20px 0;
+}
+
+.trusted-by-scroll-content {
+  display: flex;
+  gap: 24px;
+  padding: 0 20px;
+  animation: scroll-left 30s linear infinite;
+  width: fit-content;
+}
+
+/* Pause animation on hover */
+.trusted-by-scroll-wrapper:hover .trusted-by-scroll-content {
+  animation-play-state: paused;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-50% - 12px));
+  }
+}
+
+/* Responsive scroll speed */
+@media (max-width: 768px) {
+  .trusted-by-scroll-content {
+    animation: scroll-left 25s linear infinite;
+    gap: 16px;
+  }
+  
+  .trusted-by-company-card {
+    width: 180px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .trusted-by-company-card > div {
+    min-height: 140px !important;
+    width: 180px !important;
+  }
+}
+
+/* Smooth scroll for better performance */
+.trusted-by-scroll-content {
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Company card animations */
+.trusted-by-company-card {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.trusted-by-company-card:hover {
+  transform: translateY(-8px);
+}
+
+/* Image hover effect */
+.trusted-by-company-card img {
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.trusted-by-company-card:hover img {
+  filter: grayscale(0);
+  transform: scale(1.05);
+}
+
+/* Ensure smooth rendering */
+@media (prefers-reduced-motion: reduce) {
+  .trusted-by-scroll-content {
+    animation: none;
+  }
+  
+  .trusted-by-company-card:hover {
+    transform: none;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+  .trusted-by-scroll-wrapper {
+    padding: 16px 0;
+  }
+  
+  .trusted-by-scroll-content {
+    gap: 12px;
+    padding: 0 12px;
+  }
+  
+  .trusted-by-company-card > div {
+    min-height: 120px !important;
+    padding: 12px !important;
+  }
+}
+
+/* Accessibility - visible focus states */
+.trusted-by-company-card div {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline 0.2s ease;
+}
+
+.trusted-by-company-card div:focus-visible {
+  outline: 2px solid #F46A1F;
+}
+
+/* Loading state */
+.trusted-by-scroll-wrapper.loading {
+  opacity: 0.6;
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .trusted-by-scroll-wrapper {
+    background: linear-gradient(90deg, #1f2937 0%, rgba(31, 41, 55, 0.95) 50%, #1f2937 100%);
+  }
+  
+  .trusted-by-company-card > div {
+    background-color: #374151;
+    border-color: #4b5563;
+  }
+  
+  .trusted-by-company-card > div:hover {
+    border-color: #F46A1F;
+  }
+}
