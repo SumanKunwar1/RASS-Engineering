@@ -38,6 +38,82 @@ const createAxiosInstance = () => {
   return instance;
 };
 
+// IMAGE COMPRESSION FUNCTION - Reduces image size by 60-70%
+const compressImage = (file: File, maxQuality: number = 0.85): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'));
+          return;
+        }
+        
+        // Set max dimensions for featured image
+        const maxWidth = 1200;
+        const maxHeight = 630;
+        let width = img.width;
+        let height = img.height;
+        
+        // Calculate aspect ratio and resize
+        if (width > height) {
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to JPEG with compression quality
+        resolve(canvas.toDataURL('image/jpeg', maxQuality));
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = event.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+};
+
+// Calculate total payload size
+const calculatePayloadSize = (formData: BlogPost): number => {
+  const imageSize = formData.image ? formData.image.length : 0;
+  const contentSize = formData.content.length;
+  const metadataSize = JSON.stringify({
+    title: formData.title,
+    excerpt: formData.excerpt,
+    author: formData.author,
+    date: formData.date,
+    category: formData.category,
+    readTime: formData.readTime,
+    published: formData.published,
+    tags: formData.tags
+  }).length;
+  
+  return imageSize + contentSize + metadataSize;
+};
+
+// Format bytes to human readable
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+};
+
 export default function AdminBlog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,6 +123,7 @@ export default function AdminBlog() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
 
   const [formData, setFormData] = useState<BlogPost>({
     title: '',
@@ -72,7 +149,6 @@ export default function AdminBlog() {
     setError(null);
     try {
       const axiosInstance = createAxiosInstance();
-      // Use admin endpoint to get ALL blogs (including unpublished)
       const response = await axiosInstance.get('/blogs/admin/all');
       console.log('Fetched blogs:', response.data);
       setPosts(response.data.data || []);
@@ -190,163 +266,70 @@ export default function AdminBlog() {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
     input.setAttribute('accept', 'image/*');
-    input.click();
 
-    input.onchange = () => {
+    input.onchange = async () => {
       const file = input.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const base64 = e.target?.result as string;
-          const range = quillInstanceRef.current.getSelection(true);
-          quillInstanceRef.current.insertEmbed(range.index, 'image', base64);
-          quillInstanceRef.current.setSelection(range.index + 1);
-          setTimeout(() => setupImageResize(), 100);
-        };
-        reader.readAsDataURL(file);
+      if (!file) return;
+
+      try {
+        setUploadProgress('Compressing image...');
+        // Compress images in content to 70% quality (smaller than featured image)
+        const base64 = await compressImage(file, 0.7);
+        setUploadProgress('');
+
+        const range = quillInstanceRef.current.getSelection();
+        quillInstanceRef.current.insertEmbed(range.index, 'image', base64);
+      } catch (error) {
+        console.error('Image compression error:', error);
+        setError('Failed to process image');
+        setUploadProgress('');
       }
     };
+
+    input.click();
   };
 
   const setupImageResize = () => {
-    if (!quillInstanceRef.current) return;
-
-    const editor = quillInstanceRef.current.root;
-    const images = editor.querySelectorAll('img');
-    
-    images.forEach((img: HTMLImageElement) => {
-      if (img.dataset.resizable) return;
-      img.dataset.resizable = 'true';
-      
-      if (!img.style.width) {
-        img.style.maxWidth = '100%';
-        img.style.height = 'auto';
-      }
-      
-      let resizeHandle: HTMLDivElement | null = null;
-      let isResizing = false;
-      let startX = 0;
-      let startY = 0;
-      let startWidth = 0;
-      let startHeight = 0;
-
-      const selectImage = (e: MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        document.querySelectorAll('.image-resize-handle').forEach(h => h.remove());
-        document.querySelectorAll('.resizing').forEach(i => i.classList.remove('resizing'));
-        
-        img.classList.add('resizing');
-        
-        resizeHandle = document.createElement('div');
-        resizeHandle.className = 'image-resize-handle';
-        resizeHandle.style.position = 'absolute';
-        resizeHandle.style.pointerEvents = 'auto';
-        
-        const updateHandlePosition = () => {
-          if (!resizeHandle) return;
-          const imgRect = img.getBoundingClientRect();
-          const containerRect = editor.parentElement?.getBoundingClientRect();
-          if (containerRect) {
-            resizeHandle.style.left = `${imgRect.right - containerRect.left - 6}px`;
-            resizeHandle.style.top = `${imgRect.bottom - containerRect.top - 6}px`;
-          }
-        };
-        
-        updateHandlePosition();
-        editor.parentElement?.style.setProperty('position', 'relative');
-        editor.parentElement?.appendChild(resizeHandle);
-        
-        const onHandleMouseDown = (e: MouseEvent) => {
-          e.preventDefault();
-          e.stopPropagation();
-          isResizing = true;
-          startX = e.clientX;
-          startY = e.clientY;
-          startWidth = img.offsetWidth;
-          startHeight = img.offsetHeight;
-          
-          document.body.style.cursor = 'nwse-resize';
-          document.body.style.userSelect = 'none';
-          
-          const onMouseMove = (e: MouseEvent) => {
-            if (!isResizing) return;
+    const script = document.createElement('script');
+    script.innerHTML = `
+      (function() {
+        const images = document.querySelectorAll('.ql-editor img');
+        images.forEach(img => {
+          img.addEventListener('click', function(e) {
+            if (e.target.classList.contains('image-resize-handle')) return;
             
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
-            const delta = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
+            const handle = document.querySelector('.image-resize-handle');
+            if (handle) handle.remove();
             
-            const newWidth = Math.max(50, Math.min(startWidth + delta, editor.offsetWidth - 20));
-            const aspectRatio = startHeight / startWidth;
-            const newHeight = newWidth * aspectRatio;
+            const rect = img.getBoundingClientRect();
+            const handle2 = document.createElement('div');
+            handle2.className = 'image-resize-handle';
+            handle2.style.left = (rect.right - rect.left - 10) + 'px';
+            handle2.style.top = (rect.bottom - rect.top - 10) + 'px';
             
-            img.style.width = `${newWidth}px`;
-            img.style.height = `${newHeight}px`;
-            img.style.maxWidth = 'none';
-            
-            updateHandlePosition();
-          };
-          
-          const onMouseUp = () => {
-            if (!isResizing) return;
-            isResizing = false;
-            document.body.style.cursor = 'default';
-            document.body.style.userSelect = 'auto';
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-            
-            setTimeout(() => {
-              if (quillInstanceRef.current) {
-                const html = quillInstanceRef.current.root.innerHTML;
-                setFormData(prev => ({ ...prev, content: html }));
-              }
-            }, 100);
-          };
-          
-          document.addEventListener('mousemove', onMouseMove);
-          document.addEventListener('mouseup', onMouseUp);
-        };
-        
-        resizeHandle.addEventListener('mousedown', onHandleMouseDown);
-      };
-
-      img.addEventListener('click', selectImage);
-    });
-
-    const deselectImages = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName !== 'IMG' && !target.classList.contains('image-resize-handle')) {
-        document.querySelectorAll('.image-resize-handle').forEach(h => h.remove());
-        document.querySelectorAll('.resizing').forEach(i => i.classList.remove('resizing'));
-      }
-    };
-    
-    editor.addEventListener('click', deselectImages);
+            img.parentElement.appendChild(handle2);
+          });
+        });
+      })();
+    `;
+    document.body.appendChild(script);
   };
 
-  useEffect(() => {
-    if (quillInstanceRef.current && formData.content && activeTab === 'content') {
-      const currentContent = quillInstanceRef.current.root.innerHTML;
-      if (currentContent !== formData.content) {
-        const selection = quillInstanceRef.current.getSelection();
-        quillInstanceRef.current.root.innerHTML = formData.content;
-        if (selection) {
-          quillInstanceRef.current.setSelection(selection);
-        }
-      }
-    }
-  }, [activeTab]);
-
+  // Handle featured image upload with compression
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData(prev => ({ ...prev, image: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
+    try {
+      setUploadProgress('Compressing featured image...');
+      const compressedImage = await compressImage(file, 0.85);
+      setFormData(prev => ({ ...prev, image: compressedImage }));
+      setUploadProgress('');
+    } catch (err) {
+      console.error('Image upload error:', err);
+      setError('Failed to process image');
+      setUploadProgress('');
+    }
   };
 
   const handleCreate = () => {
@@ -370,7 +353,7 @@ export default function AdminBlog() {
 
   const handleEdit = (post: BlogPost) => {
     setEditingPost(post);
-    setFormData({ ...post });
+    setFormData(post);
     setActiveTab('basic');
     setError(null);
     setIsModalOpen(true);
@@ -379,189 +362,252 @@ export default function AdminBlog() {
   const handleSave = async () => {
     setError(null);
 
+    // Validation
     if (!formData.title || !formData.excerpt || !formData.content || !formData.category || !formData.image) {
       setError('Please fill all required fields');
       return;
     }
 
+    // Check payload size
+    const payloadSize = calculatePayloadSize(formData);
+    const payloadMB = payloadSize / (1024 * 1024);
+
+    if (payloadMB > 50) {
+      setError(`Payload too large (${formatBytes(payloadSize)}). Please reduce image quality or content size.`);
+      return;
+    }
+
+    if (payloadMB > 20) {
+      console.warn(`Large payload: ${formatBytes(payloadSize)}. Consider optimizing images.`);
+    }
+
     setSaving(true);
+    setUploadProgress(`Uploading blog post (${formatBytes(payloadSize)})...`);
 
     try {
       const axiosInstance = createAxiosInstance();
-      
-      console.log('Saving blog:', {
-        title: formData.title,
-        hasContent: !!formData.content,
-        contentLength: formData.content?.length,
-        hasImage: !!formData.image
-      });
 
       if (editingPost && editingPost._id) {
-        const response = await axiosInstance.put(`/blogs/${editingPost._id}`, formData);
-        console.log('Update response:', response.data);
+        setUploadProgress('Updating blog post...');
+        await axiosInstance.put(`/blogs/${editingPost._id}`, formData);
       } else {
-        const response = await axiosInstance.post('/blogs', formData);
-        console.log('Create response:', response.data);
+        setUploadProgress('Creating blog post...');
+        await axiosInstance.post('/blogs', formData);
       }
 
-      await fetchBlogs();
+      setUploadProgress('');
       setIsModalOpen(false);
-      setEditingPost(null);
-      
-      // Show success message
-      alert(editingPost ? 'Blog updated successfully!' : 'Blog created successfully!');
+      fetchBlogs();
     } catch (err: any) {
+      console.error('Save error:', err);
       const errorMsg = err.response?.data?.message || 'Failed to save blog post';
       setError(errorMsg);
-      console.error('Save error:', err);
-      console.error('Error response:', err.response?.data);
-      alert('Error: ' + errorMsg);
+      setUploadProgress('');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
+    setSaving(true);
+    setError(null);
+
     try {
       const axiosInstance = createAxiosInstance();
       await axiosInstance.delete(`/blogs/${id}`);
-      await fetchBlogs();
       setDeleteConfirm(null);
+      fetchBlogs();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to delete blog post');
-      console.error('Delete error:', err);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handlePreview = () => {
-    setActiveTab('preview');
+  const togglePublished = async (id: string, currentStatus: boolean) => {
+    try {
+      const axiosInstance = createAxiosInstance();
+      await axiosInstance.patch(`/blogs/${id}/toggle-published`);
+      fetchBlogs();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to toggle blog status');
+    }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+          <p className="text-gray-600">Loading blog posts...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const payloadSize = calculatePayloadSize(formData);
+  const payloadMB = payloadSize / (1024 * 1024);
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Blog Management</h1>
-            <p className="text-gray-600 mt-1">Create and manage your blog content</p>
-          </div>
+          <h1 className="text-4xl font-bold text-gray-900">Blog Management</h1>
           <button
             onClick={handleCreate}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors shadow-lg"
           >
             <Plus size={20} />
-            Add Blog Post
+            New Post
           </button>
         </div>
 
+        {/* Error Alert */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-            <AlertCircle size={20} />
-            <span>{error}</span>
-            <button onClick={() => setError(null)} className="ml-auto">
-              <X size={20} />
-            </button>
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-red-900">Error</h3>
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
           </div>
         )}
 
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="animate-spin text-orange-500" size={48} />
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map(post => (
-              <div key={post._id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                <div className="relative h-48">
-                  <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
-                  <div className="absolute top-3 right-3 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                    {post.category}
-                  </div>
-                  {post.published && (
-                    <div className="absolute top-3 left-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      Published
-                    </div>
-                  )}
-                </div>
-                <div className="p-5">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{post.title}</h3>
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{post.excerpt}</p>
-                  <div className="space-y-1 text-sm text-gray-500 mb-4">
-                    <p>📅 {new Date(post.date).toLocaleDateString()}</p>
-                    <p>✍️ {post.author}</p>
-                    <p>⏱️ {post.readTime}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(post)}
-                      className="flex-1 flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-lg font-medium transition-colors"
-                    >
-                      <Edit size={16} />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(post._id || null)}
-                      className="flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Blog Posts Table */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {posts.length === 0 ? (
+            <div className="p-12 text-center">
+              <p className="text-gray-500 text-lg">No blog posts yet. Create your first post!</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Title</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Category</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Views</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {posts.map(post => (
+                    <tr key={post._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-gray-900 font-medium">{post.title}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{post.category}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <button
+                          onClick={() => togglePublished(post._id!, post.published)}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                            post.published
+                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                              : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                          }`}
+                        >
+                          {post.published ? 'Published' : 'Draft'}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{post.views || 0}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleEdit(post)}
+                            className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirm(post._id!)}
+                            className="text-red-600 hover:text-red-700 font-semibold transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
-        {/* Edit/Create Modal */}
+        {/* Create/Edit Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col my-8">
-              <div className="flex justify-between items-center p-6 border-b">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto w-full max-w-4xl">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-white border-b p-6 flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-900">
                   {editingPost ? 'Edit Blog Post' : 'Create New Blog Post'}
                 </h2>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  disabled={saving}
+                  className="text-gray-500 hover:text-gray-700 disabled:opacity-50"
                 >
                   <X size={24} />
                 </button>
               </div>
 
-              <div className="flex border-b bg-gray-50">
-                {['basic', 'content', 'preview'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => tab === 'preview' ? handlePreview() : setActiveTab(tab as any)}
-                    className={`flex-1 px-6 py-3 font-semibold transition-colors capitalize ${
-                      activeTab === tab
-                        ? 'text-orange-500 border-b-2 border-orange-500 bg-white'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    {tab === 'basic' ? 'Basic Info' : tab === 'content' ? 'Content Editor' : 'Preview'}
-                  </button>
-                ))}
-              </div>
-
-              {error && (
-                <div className="m-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-                  <AlertCircle size={20} />
-                  <span>{error}</span>
+              {/* Upload Progress */}
+              {uploadProgress && (
+                <div className="p-4 bg-blue-50 border-b border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+                    <p className="text-sm text-blue-700">{uploadProgress}</p>
+                  </div>
                 </div>
               )}
 
-              <div className="flex-1 overflow-y-auto p-6">
+              {/* Payload Size Warning */}
+              {payloadMB > 10 && (
+                <div className="p-4 bg-yellow-50 border-b border-yellow-200">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-yellow-800">Large Payload</p>
+                      <p className="text-sm text-yellow-700">
+                        Current payload: {formatBytes(payloadSize)} (optimal: &lt;10MB). Consider optimizing images.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tabs */}
+              <div className="border-b">
+                <div className="flex gap-0">
+                  {['basic', 'content', 'preview'].map(tab => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab as any)}
+                      className={`flex-1 py-4 text-sm font-semibold transition-colors ${
+                        activeTab === tab
+                          ? 'border-b-2 border-orange-500 text-orange-600'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
                 {activeTab === 'basic' && (
                   <div className="space-y-5">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Blog Title *</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Title *</label>
                       <input
                         type="text"
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Enter blog title"
+                        placeholder="Blog post title"
                       />
                     </div>
 
@@ -671,7 +717,7 @@ export default function AdminBlog() {
                   <div className="space-y-4" style={{ position: 'relative', height: '600px', display: 'flex', flexDirection: 'column' }}>
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <p className="text-sm text-blue-800">
-                        <strong>💡 Tips:</strong> Use the rich text editor below to format your content. Click on images to resize them by dragging the corner handle.
+                        <strong>💡 Tips:</strong> Images in content are automatically compressed. Use the editor below to format your content.
                       </p>
                     </div>
                     <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
@@ -698,9 +744,7 @@ export default function AdminBlog() {
 
               <div className="flex justify-between items-center gap-3 p-6 border-t bg-gray-50">
                 <div className="text-sm text-gray-600">
-                  {formData.content && (
-                    <span>Content length: {formData.content.replace(/<[^>]*>/g, '').length} characters</span>
-                  )}
+                  Payload: {formatBytes(payloadSize)}
                 </div>
                 <div className="flex gap-3">
                   <button

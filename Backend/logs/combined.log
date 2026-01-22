@@ -1014,3 +1014,25 @@
 {"level":"info","message":"📦 Database: test","timestamp":"2026-01-22 13:48:15"}
 {"level":"info","message":"Admin user already exists","timestamp":"2026-01-22 13:48:15"}
 {"level":"info","message":"Admin logged in: admin@rass.com","timestamp":"2026-01-22 13:48:55"}
+{"level":"info","message":"✅ Cloudinary configured successfully","timestamp":"2026-01-22 14:36:58"}
+{"level":"info","message":"🚀 Server running on port 5000 in development mode","timestamp":"2026-01-22 14:36:59"}
+{"level":"info","message":"📍 Server URL: http://localhost:5000","timestamp":"2026-01-22 14:36:59"}
+{"level":"info","message":"🌐 Client URL: http://localhost:8080","timestamp":"2026-01-22 14:36:59"}
+{"level":"info","message":"✅ MongoDB Connected: ac-k28o68q-shard-00-01.rttgmtn.mongodb.net","timestamp":"2026-01-22 14:37:00"}
+{"level":"info","message":"📦 Database: test","timestamp":"2026-01-22 14:37:00"}
+{"level":"info","message":"Admin user already exists","timestamp":"2026-01-22 14:37:01"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/momgcz49xai8e8bqg9ak","timestamp":"2026-01-22 14:40:00"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/q9x15t7cmtib0dwsuohj","timestamp":"2026-01-22 14:40:01"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/e5rmcosygpxwzhj0qjtd","timestamp":"2026-01-22 14:40:03"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/ly1uxkild2xdu99ms5k0","timestamp":"2026-01-22 14:40:03"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/bimtvsbmav0uwcoxydbi","timestamp":"2026-01-22 14:40:03"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/wthzhlcvemn8hfbxkjxj","timestamp":"2026-01-22 14:40:03"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/oieibru1luewyje2i3ov","timestamp":"2026-01-22 14:40:03"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/mddubbqiif5ahmhvc87x","timestamp":"2026-01-22 14:40:04"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/n0zy42egokxlnk5s4ss5","timestamp":"2026-01-22 14:40:04"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/xvsowceuvhlearskkj5o","timestamp":"2026-01-22 14:40:04"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/t7kxfs8fcekokdg8qyob","timestamp":"2026-01-22 14:40:04"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/oeb65ez8upbtmdslnafa","timestamp":"2026-01-22 14:40:04"}
+{"level":"info","message":"Image uploaded to Cloudinary: rass-engineering/projects/gallery/jllpahzmprgeaa5m9fry","timestamp":"2026-01-22 14:40:04"}
+{"level":"info","message":"12 images uploaded to Cloudinary","timestamp":"2026-01-22 14:40:04"}
+{"level":"info","message":"Project created by admin: admin@rass.com - Distinctio Itaque h","timestamp":"2026-01-22 14:40:04"}
